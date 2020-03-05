@@ -698,7 +698,7 @@ class ConfigOptions:
             err_handler.err_out_screen('Unable to locate AnAFlag in the configuration file.')
         except ValueError:
             err_handler.err_out_screen('Improper AnAFlag value ')
-        if self.retro_flag < 0 or self.retro_flag > 1:
+        if self.ana_flag < 0 or self.ana_flag > 1:
             err_handler.err_out_screen('Please choose a AnAFlag value of 0 or 1.')
 
         # Read in temperature bias correction options

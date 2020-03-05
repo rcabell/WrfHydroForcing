@@ -90,7 +90,7 @@ def run_bias_correction(input_forcings, config_options, geo_meta_wrf_hydro, mpi_
         1: cfsv2_nldas_nwm_bias_correct,
         2: ncar_tbl_correction,
         3: ncar_temp_gfs_bias_correct,
-        4: ncar_temp_hrrr_bias_correct()
+        4: ncar_temp_hrrr_bias_correct
     }
     # Run for U-Wind
     bias_correct_wind[input_forcings.windBiasCorrectOpt](input_forcings, config_options, mpi_config, 2)

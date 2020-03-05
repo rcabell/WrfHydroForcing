@@ -37,7 +37,9 @@ def run_bias_correction(input_forcings, config_options, geo_meta_wrf_hydro, mpi_
     bias_correct_temperature = {
         0: no_bias_correct,
         1: cfsv2_nldas_nwm_bias_correct,
-        2: ncar_tbl_correction
+        2: ncar_tbl_correction,
+        3: ncar_temp_gfs_bias_correct,
+        4: ncar_temp_hrrr_bias_correct
     }
     bias_correct_temperature[input_forcings.t2dBiasCorrectOpt](input_forcings, config_options, mpi_config, 0)
     err_handler.check_program_status(config_options, mpi_config)
@@ -76,7 +78,8 @@ def run_bias_correction(input_forcings, config_options, geo_meta_wrf_hydro, mpi_
     bias_correct_lw = {
         0: no_bias_correct,
         1: cfsv2_nldas_nwm_bias_correct,
-        2: ncar_blanket_adjustment_lw
+        2: ncar_blanket_adjustment_lw,
+        3: ncar_lwdown_gfs_bias_correct
     }
     bias_correct_lw[input_forcings.lwBiasCorrectOpt](input_forcings, config_options, mpi_config, 6)
     err_handler.check_program_status(config_options, mpi_config)
@@ -85,7 +88,9 @@ def run_bias_correction(input_forcings, config_options, geo_meta_wrf_hydro, mpi_
     bias_correct_wind = {
         0: no_bias_correct,
         1: cfsv2_nldas_nwm_bias_correct,
-        2: ncar_tbl_correction
+        2: ncar_tbl_correction,
+        3: ncar_temp_gfs_bias_correct,
+        4: ncar_temp_hrrr_bias_correct()
     }
     # Run for U-Wind
     bias_correct_wind[input_forcings.windBiasCorrectOpt](input_forcings, config_options, mpi_config, 2)

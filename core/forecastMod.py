@@ -106,7 +106,7 @@ def process_forecasts(ConfigOptions, wrfHydroGeoMeta, inputForcingMod, suppPcpMo
             ConfigOptions.current_output_date = OutputObj.outDate
 
             # if AnA, adjust output date for analysis vs forecast
-            file_date = OutputObj.outDate - datetime.timedelta(seconds=ConfigOptions.output_freq*60*(ana_factor + 1))
+            file_date = OutputObj.outDate - datetime.timedelta(seconds=ConfigOptions.output_freq*60*(ana_factor * 2))
 
             # Calculate the previous output timestep. This is used in potential downscaling routines.
             if outStep == ana_factor:

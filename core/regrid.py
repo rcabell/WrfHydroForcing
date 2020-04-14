@@ -2385,29 +2385,29 @@ def calculate_weights(id_tmp, force_count, input_forcings, config_options, mpi_c
     # ## CALCULATE WEIGHT ## #
     # Try to find a pre-existing weight file, if available
 
-    weight_file = None
+    rh_file = None
     if config_options.weightsDir is not None:
         grid_key = input_forcings.productName
-        weight_file = os.path.join(config_options.weightsDir, "ESMF_weight_{}_b{}.nc4".format(grid_key, border))
+        rh_file = os.path.join(config_options.weightsDir, "ESMF_rh_{}proc_{}.dat".format(mpi_config.size, grid_key))
         # check if file exists:
-        if os.path.exists(weight_file):
+        if os.path.exists(rh_file):
             # read the data
             try:
                 if mpi_config.rank == 0:
-                    config_options.statusMsg = "Loading cached ESMF weight object for " + input_forcings.productName + \
-                                               " from " + weight_file
+                    config_options.statusMsg = "Loading cached ESMF RouteHandle object for " + \
+                                               input_forcings.productName + " from " + rh_file
                     err_handler.log_msg(config_options, mpi_config)
                 err_handler.check_program_status(config_options, mpi_config)
 
                 begin = time.monotonic()
                 input_forcings.regridObj = ESMF.RegridFromFile(input_forcings.esmf_field_in,
                                                                input_forcings.esmf_field_out,
-                                                               weight_file)
+                                                               rh_filename=rh_file)
                 end = time.monotonic()
 
                 if mpi_config.rank == 0:
-                    config_options.statusMsg = "Finished loading weight object with ESMF, took {} seconds".format(
-                        end - begin)
+                    config_options.statusMsg = "Finished loading RouteHandle object with ESMF, " \
+                                               "took {} seconds".format(end - begin)
                     err_handler.log_msg(config_options, mpi_config)
 
             except (IOError, ValueError, ESMF.ESMPyException) as esmf_error:
@@ -2416,22 +2416,22 @@ def calculate_weights(id_tmp, force_count, input_forcings, config_options, mpi_c
 
     if input_forcings.regridObj is None:
         if mpi_config.rank == 0:
-            config_options.statusMsg = "Creating weight object from ESMF"
+            config_options.statusMsg = "Creating RouteHandle object with ESMF"
             err_handler.log_msg(config_options, mpi_config)
         err_handler.check_program_status(config_options, mpi_config)
         try:
             begin = time.monotonic()
             input_forcings.regridObj = ESMF.Regrid(input_forcings.esmf_field_in,
                                                    input_forcings.esmf_field_out,
-                                                   src_mask_values=np.array([0]),
+                                                   src_mask_values=np.array([-8888]),
                                                    regrid_method=ESMF.RegridMethod.BILINEAR,
                                                    unmapped_action=ESMF.UnmappedAction.IGNORE,
-                                                   filename=weight_file)
+                                                   rh_filename=rh_file)
             end = time.monotonic()
 
             if mpi_config.rank == 0:
-                config_options.statusMsg = "Finished generating weight object with ESMF, took {} seconds".format(
-                        end - begin)
+                config_options.statusMsg = "Finished generating RouteHandle object with ESMF, " \
+                                           "took {} seconds".format(end - begin)
                 err_handler.log_msg(config_options, mpi_config)
         except (RuntimeError, ImportError, ESMF.ESMPyException) as esmf_error:
             config_options.errMsg = "Unable to regrid input data from ESMF: " + str(esmf_error)
@@ -2453,9 +2453,9 @@ def calculate_weights(id_tmp, force_count, input_forcings, config_options, mpi_c
             config_options.errMsg = "Unable to extract regridded data from ESMF regridded field: " + str(ve)
             err_handler.log_critical(config_options, mpi_config)
             # delete bad cached file if it exists
-            if weight_file is not None:
-                if os.path.exists(weight_file):
-                    os.remove(weight_file)
+            if rh_file is not None:
+                if os.path.exists(rh_file):
+                    os.remove(rh_file)
         err_handler.check_program_status(config_options, mpi_config)
 
     input_forcings.regridded_mask[:, :] = input_forcings.esmf_field_out.data[:, :]

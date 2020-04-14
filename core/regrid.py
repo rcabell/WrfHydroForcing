@@ -2380,6 +2380,7 @@ def calculate_weights(id_tmp, force_count, input_forcings, config_options, mpi_c
 
     # Place temporary data into the field array for generating the regridding object.
     input_forcings.esmf_field_in.data[:, :] = var_sub_tmp
+    input_forcings.esmf_field_out.data[:, :] = 1e-20
     # mpi_config.comm.barrier()
 
     # ## CALCULATE WEIGHT ## #
@@ -2423,7 +2424,7 @@ def calculate_weights(id_tmp, force_count, input_forcings, config_options, mpi_c
             begin = time.monotonic()
             input_forcings.regridObj = ESMF.Regrid(input_forcings.esmf_field_in,
                                                    input_forcings.esmf_field_out,
-                                                   src_mask_values=np.array([-8888]),
+                                                   src_mask_values=np.array([0]),
                                                    regrid_method=ESMF.RegridMethod.BILINEAR,
                                                    unmapped_action=ESMF.UnmappedAction.IGNORE,
                                                    rh_filename=rh_file)

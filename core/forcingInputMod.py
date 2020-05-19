@@ -21,6 +21,8 @@ class input_forcings:
     GRIB2 = "GRIB2"
     GRIB1 = "GRIB1"
     NETCDF = "NETCDF"
+
+    NUM_OUTPUTS = 8
     
     def __init__(self):
         """
@@ -506,7 +508,8 @@ def initDict(ConfigOptions,GeoMetaWrfHydro):
         # of the local grid for this forcing, for a specific output timesetp.
         # This grid will be updated from one output timestep to another, and
         # also through downscaling and bias correction.
-        InputDict[force_key].final_forcings = np.empty([8,GeoMetaWrfHydro.ny_local,
+        InputDict[force_key].final_forcings = np.empty([input_forcings.NUM_OUTPUTS,
+                                                        GeoMetaWrfHydro.ny_local,
                                                         GeoMetaWrfHydro.nx_local],
                                                        np.float64)
         InputDict[force_key].height = np.empty([GeoMetaWrfHydro.ny_local,

@@ -8,7 +8,7 @@ from core import err_handler
 from core import forcingInputMod
 from core import forecastMod
 from core import geoMod
-from core import ioMod
+from core import file_io
 from core import parallel
 from core import suppPrecipMod
 
@@ -96,7 +96,7 @@ def main():
 
     # Initialize our output object, which includes local slabs from the output grid.
     try:
-        OutputObj = ioMod.OutputObj(WrfHydroGeoMeta)
+        OutputObj = file_io.OutputObj(WrfHydroGeoMeta)
     except Exception:
         err_handler.err_out_screen_para(job_meta, mpi_meta)
     err_handler.check_program_status(job_meta, mpi_meta)

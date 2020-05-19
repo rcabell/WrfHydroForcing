@@ -10,7 +10,7 @@ import ESMF
 import numpy as np
 
 from core import err_handler
-from core import ioMod
+from core import file_io
 from core import timeInterpMod
 
 # TODO: import these from forcingInputMod (not working currently ¯\_(ツ)_/¯)
@@ -108,12 +108,12 @@ def regrid_conus_hrrr(input_forcings, config_options, wrf_hydro_geo_meta, mpi_co
         # Create a temporary NetCDF file from the GRIB2 file.
         cmd = '$WGRIB2 -match "(' + '|'.join(fields) + ')" ' + input_forcings.file_in2 + \
               " -netcdf " + input_forcings.tmpFile
-        id_tmp = ioMod.open_grib2(input_forcings.file_in2, input_forcings.tmpFile, cmd,
+        id_tmp = file_io.open_grib2(input_forcings.file_in2, input_forcings.tmpFile, cmd,
                                   config_options, mpi_config, inputVar=None)
         err_handler.check_program_status(config_options, mpi_config)
     else:
         create_link("HRRR", input_forcings.file_in2, input_forcings.tmpFile, config_options, mpi_config)
-        id_tmp = ioMod.open_netcdf_forcing(input_forcings.tmpFile, config_options, mpi_config)
+        id_tmp = file_io.open_netcdf_forcing(input_forcings.tmpFile, config_options, mpi_config)
 
     for force_count, grib_var in enumerate(input_forcings.grib_vars):
         if mpi_config.rank == 0:
@@ -138,7 +138,7 @@ def regrid_conus_hrrr(input_forcings, config_options, wrf_hydro_geo_meta, mpi_co
             # cmd = "$WGRIB2 " + input_forcings.file_in2 + " -match " + \
             #       "\":(HGT):(surface):\" " + \
             #       " -netcdf " + input_forcings.tmpFileHeight
-            # id_tmp_height = ioMod.open_grib2(input_forcings.file_in2, input_forcings.tmpFileHeight,
+            # id_tmp_height = file_io.open_grib2(input_forcings.file_in2, input_forcings.tmpFileHeight,
             #                                  cmd, config_options, mpi_config, 'HGT_surface')
             # err_handler.check_program_status(config_options, mpi_config)
 
@@ -338,12 +338,12 @@ def regrid_conus_rap(input_forcings, config_options, wrf_hydro_geo_meta, mpi_con
         # Create a temporary NetCDF file from the GRIB2 file.
         cmd = '$WGRIB2 -match "(' + '|'.join(fields) + ')" ' + input_forcings.file_in2 + \
               " -netcdf " + input_forcings.tmpFile
-        id_tmp = ioMod.open_grib2(input_forcings.file_in2, input_forcings.tmpFile, cmd,
+        id_tmp = file_io.open_grib2(input_forcings.file_in2, input_forcings.tmpFile, cmd,
                                   config_options, mpi_config, inputVar=None)
         err_handler.check_program_status(config_options, mpi_config)
     else:
         create_link("RAP", input_forcings.file_in2, input_forcings.tmpFile, config_options, mpi_config)
-        id_tmp = ioMod.open_netcdf_forcing(input_forcings.tmpFile, config_options, mpi_config)
+        id_tmp = file_io.open_netcdf_forcing(input_forcings.tmpFile, config_options, mpi_config)
 
     for force_count, grib_var in enumerate(input_forcings.grib_vars):
         if mpi_config.rank == 0:
@@ -368,7 +368,7 @@ def regrid_conus_rap(input_forcings, config_options, wrf_hydro_geo_meta, mpi_con
             # cmd = "$WGRIB2 " + input_forcings.file_in2 + " -match " + \
             #       "\":(HGT):(surface):\" " + \
             #       " -netcdf " + input_forcings.tmpFileHeight
-            # id_tmp_height = ioMod.open_grib2(input_forcings.file_in2, input_forcings.tmpFileHeight,
+            # id_tmp_height = file_io.open_grib2(input_forcings.file_in2, input_forcings.tmpFileHeight,
             #                                  cmd, config_options, mpi_config, 'HGT_surface')
             # err_handler.check_program_status(config_options, mpi_config)
 
@@ -578,12 +578,12 @@ def regrid_cfsv2(input_forcings, config_options, wrf_hydro_geo_meta, mpi_config)
         # Create a temporary NetCDF file from the GRIB2 file.
         cmd = '$WGRIB2 -match "(' + '|'.join(fields) + ')" ' + input_forcings.file_in2 + \
               " -netcdf " + input_forcings.tmpFile
-        id_tmp = ioMod.open_grib2(input_forcings.file_in2, input_forcings.tmpFile, cmd,
+        id_tmp = file_io.open_grib2(input_forcings.file_in2, input_forcings.tmpFile, cmd,
                                   config_options, mpi_config, inputVar=None)
         err_handler.check_program_status(config_options, mpi_config)
     else:
         create_link("CFSv2", input_forcings.file_in2, input_forcings.tmpFile, config_options, mpi_config)
-        id_tmp = ioMod.open_netcdf_forcing(input_forcings.tmpFile, config_options, mpi_config)
+        id_tmp = file_io.open_netcdf_forcing(input_forcings.tmpFile, config_options, mpi_config)
 
     for force_count, grib_var in enumerate(input_forcings.grib_vars):
         if mpi_config.rank == 0:
@@ -610,7 +610,7 @@ def regrid_cfsv2(input_forcings, config_options, wrf_hydro_geo_meta, mpi_config)
             # cmd = "$WGRIB2 " + input_forcings.file_in2 + " -match " + \
             #       "\":(HGT):(surface):\" " + \
             #       " -netcdf " + input_forcings.tmpFileHeight
-            # id_tmp_height = ioMod.open_grib2(input_forcings.file_in2, input_forcings.tmpFileHeight,
+            # id_tmp_height = file_io.open_grib2(input_forcings.file_in2, input_forcings.tmpFileHeight,
             #                                  cmd, config_options, mpi_config, 'HGT_surface')
             # err_handler.check_program_status(config_options, mpi_config)
 
@@ -830,7 +830,7 @@ def regrid_custom_hourly_netcdf(input_forcings, config_options, wrf_hydro_geo_me
     # mpi_config.comm.barrier()
 
     # Open the input NetCDF file containing necessary data.
-    id_tmp = ioMod.open_netcdf_forcing(input_forcings.file_in2, config_options, mpi_config)
+    id_tmp = file_io.open_netcdf_forcing(input_forcings.file_in2, config_options, mpi_config)
     # mpi_config.comm.barrier()
 
     for force_count, nc_var in enumerate(input_forcings.netcdf_var_names):
@@ -979,7 +979,7 @@ def regrid_gfs(input_forcings, config_options, wrf_hydro_geo_meta, mpi_config):
         if mpi_config.rank == 0:
             config_options.statusMsg = "Reusing previous input file: " + input_forcings.file_in2
             err_handler.log_msg(config_options, mpi_config)
-        id_tmp = ioMod.open_netcdf_forcing(input_forcings.tmpFile, config_options, mpi_config)
+        id_tmp = file_io.open_netcdf_forcing(input_forcings.tmpFile, config_options, mpi_config)
         err_handler.check_program_status(config_options, mpi_config)
     else:
         if input_forcings.fileType != NETCDF:
@@ -1013,12 +1013,12 @@ def regrid_gfs(input_forcings, config_options, wrf_hydro_geo_meta, mpi_config):
             fields.append(":(HGT):(surface):")
             cmd = '$WGRIB2 -match "(' + '|'.join(fields) + ')" ' + input_forcings.file_in2 + \
                   " -netcdf " + input_forcings.tmpFile
-            id_tmp = ioMod.open_grib2(input_forcings.file_in2, input_forcings.tmpFile, cmd,
+            id_tmp = file_io.open_grib2(input_forcings.file_in2, input_forcings.tmpFile, cmd,
                                       config_options, mpi_config, inputVar=None)
             err_handler.check_program_status(config_options, mpi_config)
         else:
             create_link("GFS", input_forcings.file_in2, input_forcings.tmpFile, config_options, mpi_config)
-            id_tmp = ioMod.open_netcdf_forcing(input_forcings.tmpFile, config_options, mpi_config)
+            id_tmp = file_io.open_netcdf_forcing(input_forcings.tmpFile, config_options, mpi_config)
 
     for force_count, grib_var in enumerate(input_forcings.grib_vars):
         if mpi_config.rank == 0:
@@ -1044,7 +1044,7 @@ def regrid_gfs(input_forcings, config_options, wrf_hydro_geo_meta, mpi_config):
             #    "\":(HGT):(surface):\" " + \
             #    " -netcdf " + input_forcings.tmpFileHeight
             # time.sleep(1)
-            # id_tmp_height = ioMod.open_grib2(input_forcings.file_in2, input_forcings.tmpFileHeight,
+            # id_tmp_height = file_io.open_grib2(input_forcings.file_in2, input_forcings.tmpFileHeight,
             #                                 cmd, config_options, mpi_config, 'HGT_surface')
             # err_handler.check_program_status(config_options, mpi_config)
 
@@ -1256,12 +1256,12 @@ def regrid_nam_nest(input_forcings, config_options, wrf_hydro_geo_meta, mpi_conf
         # Create a temporary NetCDF file from the GRIB2 file.
         cmd = '$WGRIB2 -match "(' + '|'.join(fields) + ')" ' + input_forcings.file_in2 + \
               " -netcdf " + input_forcings.tmpFile
-        id_tmp = ioMod.open_grib2(input_forcings.file_in2, input_forcings.tmpFile, cmd,
+        id_tmp = file_io.open_grib2(input_forcings.file_in2, input_forcings.tmpFile, cmd,
                                   config_options, mpi_config, inputVar=None)
         err_handler.check_program_status(config_options, mpi_config)
     else:
         create_link("NAM-Nest", input_forcings.file_in2, input_forcings.tmpFile, config_options, mpi_config)
-        id_tmp = ioMod.open_netcdf_forcing(input_forcings.tmpFile, config_options, mpi_config)
+        id_tmp = file_io.open_netcdf_forcing(input_forcings.tmpFile, config_options, mpi_config)
 
     # Loop through all of the input forcings in NAM nest data. Convert the GRIB2 files
     # to NetCDF, read in the data, regrid it, then map it to the appropriate
@@ -1289,7 +1289,7 @@ def regrid_nam_nest(input_forcings, config_options, wrf_hydro_geo_meta, mpi_conf
             # cmd = "$WGRIB2 " + input_forcings.file_in2 + " -match " + \
             #       "\":(HGT):(surface):\" " + \
             #       " -netcdf " + input_forcings.tmpFileHeight
-            # id_tmp_height = ioMod.open_grib2(input_forcings.file_in2, input_forcings.tmpFileHeight,
+            # id_tmp_height = file_io.open_grib2(input_forcings.file_in2, input_forcings.tmpFileHeight,
             #                                  cmd, config_options, mpi_config, 'HGT_surface')
             # err_handler.check_program_status(config_options, mpi_config)
 
@@ -1530,22 +1530,22 @@ def regrid_mrms_hourly(supplemental_precip, config_options, wrf_hydro_geo_meta, 
 
     if supplemental_precip.fileType != NETCDF:
         # Unzip MRMS files to temporary locations.
-        ioMod.unzip_file(supplemental_precip.file_in2, mrms_tmp_grib2, config_options, mpi_config)
+        file_io.unzip_file(supplemental_precip.file_in2, mrms_tmp_grib2, config_options, mpi_config)
         err_handler.check_program_status(config_options, mpi_config)
 
         if config_options.rqiMethod == 1:
-            ioMod.unzip_file(supplemental_precip.rqi_file_in2, mrms_tmp_rqi_grib2, config_options, mpi_config)
+            file_io.unzip_file(supplemental_precip.rqi_file_in2, mrms_tmp_rqi_grib2, config_options, mpi_config)
             err_handler.check_program_status(config_options, mpi_config)
 
         # Perform a GRIB dump to NetCDF for the MRMS precip and RQI data.
         cmd1 = "$WGRIB2 " + mrms_tmp_grib2 + " -netcdf " + mrms_tmp_nc
-        id_mrms = ioMod.open_grib2(mrms_tmp_grib2, mrms_tmp_nc, cmd1, config_options,
+        id_mrms = file_io.open_grib2(mrms_tmp_grib2, mrms_tmp_nc, cmd1, config_options,
                                    mpi_config, supplemental_precip.netcdf_var_names[0])
         err_handler.check_program_status(config_options, mpi_config)
 
         if config_options.rqiMethod == 1:
             cmd2 = "$WGRIB2 " + mrms_tmp_rqi_grib2 + " -netcdf " + mrms_tmp_rqi_nc
-            id_mrms_rqi = ioMod.open_grib2(mrms_tmp_rqi_grib2, mrms_tmp_rqi_nc, cmd2, config_options,
+            id_mrms_rqi = file_io.open_grib2(mrms_tmp_rqi_grib2, mrms_tmp_rqi_nc, cmd2, config_options,
                                            mpi_config, supplemental_precip.rqi_netcdf_var_names[0])
             err_handler.check_program_status(config_options, mpi_config)
         else:
@@ -1568,10 +1568,10 @@ def regrid_mrms_hourly(supplemental_precip, config_options, wrf_hydro_geo_meta, 
         err_handler.check_program_status(config_options, mpi_config)
     else:
         create_link("MRMS", supplemental_precip.file_in2, mrms_tmp_nc, config_options, mpi_config)
-        id_mrms = ioMod.open_netcdf_forcing(mrms_tmp_nc, config_options, mpi_config)
+        id_mrms = file_io.open_netcdf_forcing(mrms_tmp_nc, config_options, mpi_config)
         if config_options.rqiMethod == 1:
             create_link("RQI", supplemental_precip.rqi_file_in2, mrms_tmp_rqi_nc, config_options, mpi_config)
-            id_mrms_rqi = ioMod.open_netcdf_forcing(mrms_tmp_rqi_nc, config_options, mpi_config)
+            id_mrms_rqi = file_io.open_netcdf_forcing(mrms_tmp_rqi_nc, config_options, mpi_config)
         else:
             id_mrms_rqi = None
 
@@ -1639,7 +1639,7 @@ def regrid_mrms_hourly(supplemental_precip, config_options, wrf_hydro_geo_meta, 
 
     elif config_options.rqiMethod == 2:
         # Read in the RQI field from monthly climatological files.
-        ioMod.read_rqi_monthly_climo(config_options, mpi_config, supplemental_precip, wrf_hydro_geo_meta)
+        file_io.read_rqi_monthly_climo(config_options, mpi_config, supplemental_precip, wrf_hydro_geo_meta)
     elif config_options.rqiMethod == 1:
         # We are using the MRMS RQI field in realtime
         supplemental_precip.regridded_rqi2[:, :] = supplemental_precip.esmf_field_out.data
@@ -1802,12 +1802,12 @@ def regrid_hourly_wrf_arw(input_forcings, config_options, wrf_hydro_geo_meta, mp
         # Create a temporary NetCDF file from the GRIB2 file.
         cmd = '$WGRIB2 -match "(' + '|'.join(fields) + ')" ' + input_forcings.file_in2 + \
               " -netcdf " + input_forcings.tmpFile
-        id_tmp = ioMod.open_grib2(input_forcings.file_in2, input_forcings.tmpFile, cmd,
+        id_tmp = file_io.open_grib2(input_forcings.file_in2, input_forcings.tmpFile, cmd,
                                   config_options, mpi_config, inputVar=None)
         err_handler.check_program_status(config_options, mpi_config)
     else:
         create_link("WRF-ARW", input_forcings.file_in2, input_forcings.tmpFile, config_options, mpi_config)
-        id_tmp = ioMod.open_netcdf_forcing(input_forcings.tmpFile, config_options, mpi_config)
+        id_tmp = file_io.open_netcdf_forcing(input_forcings.tmpFile, config_options, mpi_config)
 
     # Loop through all of the input forcings in NAM nest data. Convert the GRIB2 files
     # to NetCDF, read in the data, regrid it, then map it to the appropriate
@@ -1835,7 +1835,7 @@ def regrid_hourly_wrf_arw(input_forcings, config_options, wrf_hydro_geo_meta, mp
             # cmd = "$WGRIB2 " + input_forcings.file_in2 + " -match " + \
             #       "\":(HGT):(surface):\" " + \
             #       " -netcdf " + input_forcings.tmpFileHeight
-            # id_tmp_height = ioMod.open_grib2(input_forcings.file_in2, input_forcings.tmpFileHeight,
+            # id_tmp_height = file_io.open_grib2(input_forcings.file_in2, input_forcings.tmpFileHeight,
             #                                  cmd, config_options, mpi_config, 'HGT_surface')
             # err_handler.check_program_status(config_options, mpi_config)
 
@@ -2041,12 +2041,12 @@ def regrid_hourly_wrf_arw_hi_res_pcp(supplemental_precip, config_options, wrf_hy
               "-" + str(supplemental_precip.fcst_hour1) + " hour acc fcst):\"" + \
               " -netcdf " + arw_tmp_nc
 
-        id_tmp = ioMod.open_grib2(supplemental_precip.file_in1, arw_tmp_nc, cmd,
+        id_tmp = file_io.open_grib2(supplemental_precip.file_in1, arw_tmp_nc, cmd,
                                   config_options, mpi_config, "APCP_surface")
         err_handler.check_program_status(config_options, mpi_config)
     else:
         create_link("ARW-PCP", supplemental_precip.file_in1, arw_tmp_nc, config_options, mpi_config)
-        id_tmp = ioMod.open_netcdf_forcing(arw_tmp_nc, config_options, mpi_config)
+        id_tmp = file_io.open_netcdf_forcing(arw_tmp_nc, config_options, mpi_config)
 
     # Check to see if we need to calculate regridding weights.
     calc_regrid_flag = check_supp_pcp_regrid_status(id_tmp, supplemental_precip, config_options,

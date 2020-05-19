@@ -463,8 +463,7 @@ class OutputObj:
         err_handler.check_program_status(ConfigOptions, MpiConfig)
 
 
-def open_grib2(GribFileIn,NetCdfFileOut,Wgrib2Cmd,ConfigOptions,MpiConfig,
-               inputVar):
+def open_grib2(GribFileIn, NetCdfFileOut, Wgrib2Cmd, ConfigOptions, MpiConfig, inputVar):
     """
     Generic function to convert a GRIB2 file into a NetCDF file. Function
     will also open the NetCDF file, and ensure all necessary inputs are

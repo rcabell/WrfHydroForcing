@@ -16,6 +16,8 @@ class Regridder(ABC):
         self.mpi = mpi_config
         self.IS_MPI_ROOT = mpi_config.rank == 0
 
+        self._next_file_number = 0
+
     '''
     Abstract methods overridden in subclasses:
     '''
@@ -27,6 +29,10 @@ class Regridder(ABC):
     '''
     Utility methods:
     '''
+
+    def mkfilename(self):
+        self._next_file_number += 1
+        return '{}'.format(self._next_file_number)
 
     @contextmanager
     def parallel_error_checking(self):

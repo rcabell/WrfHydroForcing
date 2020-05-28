@@ -7,9 +7,8 @@ from core import file_io
 
 
 class RegridGRIB2(Regridder):
-    def __init__(self, forcing_name: str, config_options, wrf_hydro_geo_meta, mpi_config):
-        super().__init__(config_options, wrf_hydro_geo_meta, mpi_config)
-        self.name = forcing_name
+    def __init__(self, regridder_name: str, config_options, wrf_hydro_geo_meta, mpi_config):
+        super().__init__(regridder_name, config_options, wrf_hydro_geo_meta, mpi_config)
 
         # TODO: Move this to regrid_base if possible
         self._did_init_regrid = True
@@ -21,17 +20,7 @@ class RegridGRIB2(Regridder):
         self.release_netcdf(datasource)
 
     def setup_input(self, input_forcings):
-        # If the expected file is missing, this means we are allowing missing files, simply
-        # exit out of this routine as the regridded fields have already been set to NDV.
-        if not os.path.isfile(input_forcings.file_in2):
-            self.log_status("No {} input file found for this timestep".format(self.name), root_only=True)
-            return
-
-        # Check to see if the regrid complete flag for this
-        # output time step is true. This entails the necessary
-        # inputs have already been regridded and we can move on.
-        if input_forcings.regridComplete:
-            self.log_status("No {} regridding required for this timestep".format(self.name), root_only=True)
+        if self.already_processed(input_forcings):
             return
 
         # Create a path for a temporary NetCDF files that will
@@ -54,12 +43,13 @@ class RegridGRIB2(Regridder):
             fields.append(':' + grib_var + ':' +
                           input_forcings.grib_levels[forcing_idx] + ':'
                           + str(input_forcings.fcst_hour2) + " hour fcst:")
-        fields.append(":(HGT):(surface):")      # add HGT variable to main set (no separate file)
+        fields.append(":(HGT):(surface):")  # add HGT variable to main set (no separate file)
 
-        # Create a temporary NetCDF file from the GRIB2 file.
-        cmd = '$WGRIB2 -match "(' + '|'.join(fields) + ')" ' + input_forcings.file_in2 + \
-              " -netcdf " + input_forcings.tmpFile
-        with self.parallel_error_checking():
+        with self.parallel_block():
+            # Create a temporary NetCDF file from the GRIB2 file.
+            cmd = '$WGRIB2 -match "(' + '|'.join(fields) + ')" ' + input_forcings.file_in2 + \
+                  " -netcdf " + input_forcings.tmpFile
+
             datasource = file_io.open_grib2(input_forcings.file_in2, input_forcings.tmpFile, cmd,
                                             self.config, self.mpi, inputVar=None)
 
@@ -72,12 +62,12 @@ class RegridGRIB2(Regridder):
             # self.log_status("Processing {} Variable: {}".format(self.name, grib_var), root_only=True)
 
             if self.need_regrid_object(datasource, forcing_idx, input_forcings):
-                with self.parallel_error_checking():
+                with self.parallel_block():
                     self.log_status("Calculating {} regridding weights".format(self.name), root_only=True)
                     self.calculate_weights(datasource, forcing_idx, input_forcings)
 
                 # Regrid the height variable.
-                with self.parallel_error_checking():
+                with self.parallel_block():
                     var_tmp = None
                     if self.IS_MPI_ROOT:
                         try:
@@ -88,13 +78,13 @@ class RegridGRIB2(Regridder):
 
                         var_local_tmp = self.mpi.scatter_array(input_forcings, var_tmp, self.config)
 
-                with self.parallel_error_checking():
+                with self.parallel_block():
                     try:
                         input_forcings.esmf_field_in.data[:, :] = var_local_tmp
                     except (ValueError, KeyError, AttributeError) as err:
                         self.log_critical("Unable to place input {} data into ESMF field: {}".format(self.name, err))
 
-                with self.parallel_error_checking():
+                with self.parallel_block():
                     self.log_status("Regridding {} surface elevation data to the WRF-Hydro domain.".format(self.name),
                                     root_only=True)
                     try:
@@ -104,7 +94,7 @@ class RegridGRIB2(Regridder):
                         self.log_critical("Unable to regrid {} surface elevation using ESMF: {}".format(self.name, ve))
 
                 # Set any pixel cells outside the input domain to the global missing value.
-                with self.parallel_error_checking():
+                with self.parallel_block():
                     try:
                         input_forcings.esmf_field_out.data[np.where(input_forcings.regridded_mask == 0)] = \
                             self.config.globalNdv
@@ -116,7 +106,7 @@ class RegridGRIB2(Regridder):
                         input_forcings.height[:, :] = input_forcings.esmf_field_out.data
                     except (ValueError, KeyError, AttributeError) as err:
                         self.log_critical(
-                            "Unable to extract regridded {} elevation data from ESMF: {}".format(self.name, err))
+                                "Unable to extract regridded {} elevation data from ESMF: {}".format(self.name, err))
 
                 self._did_init_regrid = True
 
@@ -125,33 +115,18 @@ class RegridGRIB2(Regridder):
         if not self._did_init_regrid:
             raise RuntimeError("Attempting to regrid {} without ESMF regridding objects initialized".format(self.name))
 
-        for forcing_idx, grib_var in enumerate(input_forcings.grib_vars):
+        for forcing_idx, nc_var in enumerate(input_forcings.netcdf_var_names):
             # EXTRACT AND REGRID THE INPUT FIELDS:
-            var_tmp = None
-            with self.parallel_error_checking():
-                if self.IS_MPI_ROOT:
-                    self.log_status(
-                        "Processing input {} variable: {}".format(self.name,
-                                                                  input_forcings.netcdf_var_names[forcing_idx]))
-                    try:
-                        var_tmp = datasource.variables[input_forcings.netcdf_var_names[forcing_idx]][0, :, :]
-                    except (ValueError, KeyError, AttributeError) as err:
-                        self.log_critical(
-                            "Unable to extract {} from {} ({})".format(input_forcings.netcdf_var_names[forcing_idx],
-                                                                       input_forcings.tmpFile, err))
+            var_local_tmp = self.extract_field(datasource, input_forcings, nc_var)
 
-                var_local_tmp = self.mpi.scatter_array(input_forcings, var_tmp, self.config)
-
-            with self.parallel_error_checking():
+            with self.parallel_block():
                 try:
                     input_forcings.esmf_field_in.data[:, :] = var_local_tmp
                 except (ValueError, KeyError, AttributeError) as err:
                     self.log_critical("Unable to place input {} data into ESMF field: {}".format(self.name, err))
 
-            with self.parallel_error_checking():
-                self.log_status("Regridding {} input field: {}".format(self.name,
-                                                                       input_forcings.netcdf_var_names[forcing_idx]),
-                                root_only=True)
+            with self.parallel_block():
+                self.log_status("Regridding {} input field: {}".format(self.name, nc_var), root_only=True)
                 try:
                     input_forcings.esmf_field_out = input_forcings.regridObj(input_forcings.esmf_field_in,
                                                                              input_forcings.esmf_field_out)
@@ -159,14 +134,14 @@ class RegridGRIB2(Regridder):
                     self.log_critical("Unable to regrid {} input forcing data: {}".format(self.name, ve))
 
             # Set any pixel cells outside the input domain to the global missing value.
-            with self.parallel_error_checking():
+            with self.parallel_block():
                 try:
                     input_forcings.esmf_field_out.data[np.where(input_forcings.regridded_mask == 0)] = \
                         self.config.globalNdv
                 except (ValueError, ArithmeticError) as npe:
                     self.log_critical("Unable to perform mask test on regridded {} forcings: {}".format(self.name, npe))
 
-            with self.parallel_error_checking():
+            with self.parallel_block():
                 try:
                     input_forcings.regridded_forcings2[input_forcings.input_map_output[forcing_idx], :, :] = \
                         input_forcings.esmf_field_out.data
@@ -194,3 +169,17 @@ class RegridGRIB2(Regridder):
             except OSError:
                 # TODO: could this be just a warning?
                 self.log_critical("Unable to remove NetCDF file: {}".format(ds_path))
+
+    def extract_field(self, datasource, input_forcings, nc_var):
+        var_tmp = None
+        with self.parallel_block():
+            if self.IS_MPI_ROOT:
+                self.log_status("Processing input {} variable: {}".format(self.name, nc_var))
+                try:
+                    var_tmp = datasource.variables[nc_var][0, :, :]
+                except (ValueError, KeyError, AttributeError) as err:
+                    self.log_critical(
+                            "Unable to extract {} from {} ({})".format(nc_var, input_forcings.tmpFile, err))
+
+            var_local_tmp = self.mpi.scatter_array(input_forcings, var_tmp, self.config)
+        return var_local_tmp

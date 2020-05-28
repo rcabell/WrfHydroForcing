@@ -10,7 +10,8 @@ from core import err_handler
 
 
 class Regridder(ABC):
-    def __init__(self, config_options, wrf_hydro_geo_meta, mpi_config):
+    def __init__(self, name:str, config_options, wrf_hydro_geo_meta, mpi_config):
+        self.name = name
         self.config = config_options
         self.geo_meta = wrf_hydro_geo_meta
         self.mpi = mpi_config
@@ -35,7 +36,7 @@ class Regridder(ABC):
         return '{}'.format(self._next_file_number)
 
     @contextmanager
-    def parallel_error_checking(self):
+    def parallel_block(self):
         yield
         err_handler.check_program_status(self.config, self.mpi)
 
@@ -62,7 +63,7 @@ class Regridder(ABC):
         """
         # TODO: should this be moved into the InputForcing object?
 
-        with self.parallel_error_checking():
+        with self.parallel_block():
             if self.IS_MPI_ROOT:
                 try:
                     forcings.ny_global = dataset.variables[forcings.netcdf_var_names[forcing_idx]].shape[1]
@@ -81,7 +82,7 @@ class Regridder(ABC):
         forcings.ny_global = self.mpi.broadcast_parameter(forcings.ny_global, self.config)
         forcings.nx_global = self.mpi.broadcast_parameter(forcings.nx_global, self.config)
 
-        with self.parallel_error_checking():
+        with self.parallel_block():
             try:
                 # noinspection PyTypeChecker
                 forcings.esmf_grid_in = ESMF.Grid(np.array([forcings.ny_global, forcings.nx_global]),
@@ -110,7 +111,7 @@ class Regridder(ABC):
                 self.log_critical("Unable to extract local X/Y boundaries from global grid from " +
                                   "temporary file: {} ({})".format(forcings.tmpFile, err))
 
-        with self.parallel_error_checking():
+        with self.parallel_block():
             if self.IS_MPI_ROOT:
                 # Process lat/lon values from the GFS grid.
                 if len(dataset.variables['latitude'].shape) == 3:
@@ -133,7 +134,7 @@ class Regridder(ABC):
             local_latitude_array = self.mpi.scatter_array(forcings, global_latitude_array, self.config)
             local_longitude_array = self.mpi.scatter_array(forcings, global_longitude_array, self.config)
 
-        with self.parallel_error_checking():
+        with self.parallel_block():
             try:
                 forcings.esmf_lats = forcings.esmf_grid_in.get_coords(1)
             except ESMF.GridException as ge:
@@ -152,7 +153,7 @@ class Regridder(ABC):
         del global_longitude_array
 
         # Create a ESMF field to hold the incoming data.
-        with self.parallel_error_checking():
+        with self.parallel_block():
             try:
                 forcings.esmf_field_in = ESMF.Field(forcings.esmf_grid_in, name=forcings.productName + "_NATIVE")
 
@@ -202,7 +203,7 @@ class Regridder(ABC):
         if forcings.regridObj is None:
             self.log_status("Creating weight object from ESMF", root_only=True)
 
-            with self.parallel_error_checking():
+            with self.parallel_block():
                 try:
                     begin = time.monotonic()
                     forcings.regridObj = ESMF.Regrid(forcings.esmf_field_in,
@@ -223,7 +224,7 @@ class Regridder(ABC):
                     # print(forcings.esmf_field_out)
                     # print(np.array([0]))
 
-            with self.parallel_error_checking():
+            with self.parallel_block():
                 # Run the regridding object on this test dataset. Check the output grid for
                 # any 0 values.
                 try:
@@ -248,7 +249,7 @@ class Regridder(ABC):
         :return:
         """
 
-        with self.parallel_error_checking():
+        with self.parallel_block():
             # If the destination ESMF field hasn't been created, create it here.
             if not input_forcings.esmf_field_out:
                 try:
@@ -276,7 +277,7 @@ class Regridder(ABC):
                                                            self.geo_meta.ny_local, self.geo_meta.nx_local],
                                                           np.float32)
 
-        with self.parallel_error_checking():
+        with self.parallel_block():
             if self.IS_MPI_ROOT:
                 if input_forcings.nx_global is None or input_forcings.ny_global is None:
                     # This is the first timestep.
@@ -292,3 +293,17 @@ class Regridder(ABC):
             calc_regrid_flag = self.mpi.broadcast_parameter(calc_regrid_flag, self.config, param_type=bool)
 
         return calc_regrid_flag
+
+    def already_processed(self, input_forcings):
+        # If the expected file is missing, this means we are allowing missing files, simply
+        # exit out of this routine as the regridded fields have already been set to NDV.
+        if not os.path.isfile(input_forcings.file_in2):
+            self.log_status("No {} input file found for this timestep".format(self.name), root_only=True)
+            return
+
+        # Check to see if the regrid complete flag for this
+        # output time step is true. This entails the necessary
+        # inputs have already been regridded and we can move on.
+        if input_forcings.regridComplete:
+            self.log_status("No {} regridding required for this timestep".format(self.name), root_only=True)
+            return

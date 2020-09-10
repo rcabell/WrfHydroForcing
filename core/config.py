@@ -123,8 +123,8 @@ class ConfigOptions:
 
         # Check to make sure forcing options make sense
         for forceOpt in self.input_forcings:
-            if forceOpt < 0 or forceOpt > 18:
-                err_handler.err_out_screen('Please specify InputForcings values between 1 and 18.')
+            if forceOpt < 0 or forceOpt > 19:
+                err_handler.err_out_screen('Please specify InputForcings values between 1 and 19.')
             # Keep tabs on how many custom input forcings we have.
             if forceOpt == 10:
                 self.number_custom_inputs = self.number_custom_inputs + 1
@@ -437,9 +437,9 @@ class ConfigOptions:
                                            'file greater than zero.')
             # Currently, we only support daily or sub-daily forecasts. Any other iterations should
             # be done using custom config files for each forecast cycle.
-            if self.fcst_freq > 1440:
-                err_handler.err_out_screen('Only forecast cycles of daily or sub-daily are supported '
-                                           'at this time')
+            #if self.fcst_freq > 1440:
+            #    err_handler.err_out_screen('Only forecast cycles of daily or sub-daily are supported '
+            #                               'at this time')
 
             # Read in the ForecastShift option. This is ONLY done for the realtime instance as
             # it's used to calculate the beginning of the processing window.

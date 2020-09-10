@@ -907,17 +907,17 @@ def regrid_custom_hourly_netcdf(input_forcings, config_options, wrf_hydro_geo_me
         # mpi_config.comm.barrier()
 
         # Close the temporary NetCDF file and remove it.
-        if mpi_config.rank == 0:
-            try:
-                id_tmp.close()
-            except OSError:
-                config_options.errMsg = "Unable to close NetCDF file: " + input_forcings.tmpFile
-                err_handler.err_out(config_options)
-            try:
-                os.remove(input_forcings.tmpFile)
-            except OSError:
-                config_options.errMsg = "Unable to remove NetCDF file: " + input_forcings.tmpFile
-                err_handler.err_out(config_options)
+        #if mpi_config.rank == 0:
+        #    try:
+        #        id_tmp.close()
+        #    except OSError:
+        #        config_options.errMsg = "Unable to close NetCDF file: " + input_forcings.tmpFile
+        #        err_handler.err_out(config_options)
+        #    try:
+        #        os.remove(input_forcings.tmpFile)
+        #    except OSError:
+        #        config_options.errMsg = "Unable to remove NetCDF file: " + input_forcings.tmpFile
+        #        err_handler.err_out(config_options)
 
 
 @static_vars(last_file=None)

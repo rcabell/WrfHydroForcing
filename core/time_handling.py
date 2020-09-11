@@ -1415,19 +1415,19 @@ def find_CONUS_WRF_hourly_neighbors(input_forcings, config_options, d_current, m
                     input_forcings.file_in1 = tmp_file1
                     input_forcings.file_in2 = tmp_file2
             input_forcings.regridComplete = False
-        err_handler.check_program_status(config_options, mpi_config)
+    err_handler.check_program_status(config_options, mpi_config)
 
-        # Ensure we have the necessary new file
-        if mpi_config.rank == 0:
-            if not os.path.isfile(input_forcings.file_in2):
-                if input_forcings.enforce == 1:
-                    config_options.errMsg = "Expected input Custom file: " + input_forcings.file_in2 + " not found."
-                    err_handler.log_critical(config_options, mpi_config)
-                else:
-                    config_options.statusMsg = "Expected input Custom file: " + \
-                                               input_forcings.file_in2 + " not found. Will not use in final layering."
-                    err_handler.log_warning(config_options, mpi_config)
-        err_handler.check_program_status(config_options, mpi_config)
+    # Ensure we have the necessary new file
+    if mpi_config.rank == 0:
+        if not os.path.isfile(input_forcings.file_in2):
+            if input_forcings.enforce == 1:
+                config_options.errMsg = "Expected input Custom file: " + input_forcings.file_in2 + " not found."
+                err_handler.log_critical(config_options, mpi_config)
+            else:
+                config_options.statusMsg = "Expected input Custom file: " + \
+                                           input_forcings.file_in2 + " not found. Will not use in final layering."
+                err_handler.log_warning(config_options, mpi_config)
+    err_handler.check_program_status(config_options, mpi_config)
 
     # If the file is missing, set the local slab of arrays to missing.
     if not os.path.isfile(input_forcings.file_in2):

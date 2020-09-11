@@ -822,12 +822,10 @@ def regrid_custom_hourly_netcdf(input_forcings, config_options, wrf_hydro_geo_me
     # output time step is true. This entails the necessary
     # inputs have already been regridded and we can move on.
     if input_forcings.regridComplete:
+        if mpi_config.rank == 0:
+            config_options.statusMsg = "No Custom Hourly NetCDF regridding required for this timestep."
+            err_handler.log_msg(config_options, mpi_config)
         return
-
-    if mpi_config.rank == 0:
-        config_options.statusMsg = "No Custom Hourly NetCDF regridding required for this timestep."
-        err_handler.log_msg(config_options, mpi_config)
-    # mpi_config.comm.barrier()
 
     # Open the input NetCDF file containing necessary data.
     id_tmp = ioMod.open_netcdf_forcing(input_forcings.file_in2, config_options, mpi_config)
@@ -843,19 +841,18 @@ def regrid_custom_hourly_netcdf(input_forcings, config_options, wrf_hydro_geo_me
 
         if calc_regrid_flag:
             calculate_weights(id_tmp, force_count, input_forcings, config_options, mpi_config)
-
-            # Read in the RAP height field, which is used for downscaling purposes.
-            if 'HGT_surface' not in id_tmp.variables.keys():
-                config_options.errMsg = "Unable to locate HGT_surface in: " + input_forcings.file_in2
-                raise Exception()
-            # mpi_config.comm.barrier()
+            err_handler.check_program_status(config_options, mpi_config)
 
             # Regrid the height variable.
+            var_tmp = None
             if mpi_config.rank == 0:
-                var_tmp = id_tmp.variables['HGT_surface'][0, :, :]
-            else:
-                var_tmp = None
-            # mpi_config.comm.barrier()
+                try:
+                    var_tmp = id_tmp.variables['HGT_surface'][0, :, :]
+                except (ValueError, KeyError, AttributeError) as err:
+                    config_options.errMsg = "Unable to extract terrain elevation from " + \
+                                            input_forcings.tmpFile + ": " + str(err)
+
+            err_handler.check_program_status(config_options, mpi_config)
 
             var_sub_tmp = mpi_config.scatter_array(input_forcings, var_tmp, config_options)
             # mpi_config.comm.barrier()

@@ -610,19 +610,16 @@ def open_netcdf_forcing(NetCdfFileIn,ConfigOptions,MpiConfig):
         if idTmp is not None:
             # Check for expected lat/lon variables.
             if 'latitude' not in idTmp.variables.keys():
-                ConfigOptions.errMsg = "Unable to locate latitude from: " + \
+                ConfigOptions.statusMsg = "Unable to locate latitude from: " + \
                                         NetCdfFileIn
-                err_handler.log_critical(ConfigOptions, MpiConfig)
-                idTmp = None
-                pass
+                err_handler.log_warning(ConfigOptions, MpiConfig)
+
         if idTmp is not None:
             if 'longitude' not in idTmp.variables.keys():
-                ConfigOptions.errMsg = "Unable t locate longitude from: " + \
+                ConfigOptions.statusMsg = "Unable to locate longitude from: " + \
                                         NetCdfFileIn
-                err_handler.log_critical(ConfigOptions, MpiConfig)
-                idTmp = None
-                pass
-        pass
+                err_handler.log_warning(ConfigOptions, MpiConfig)
+
     else:
         idTmp = None
     err_handler.check_program_status(ConfigOptions, MpiConfig)

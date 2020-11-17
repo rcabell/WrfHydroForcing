@@ -57,6 +57,10 @@ class GeoMetaWrfHydro:
         #print("WRF-HYDRO LOCAL Y BOUND 1 = " + str(self.y_lower_bound))
         #print("WRF-HYDRO LOCAL Y BOUND 2 = " + str(self.y_upper_bound))
 
+        rank = self.esmf_grid.rank
+        size = self.esmf_grid.size
+        print("grid rank, size:", rank, size, flush=True)
+
     def initialize_destination_geo(self,ConfigOptions,MpiConfig):
         """
         Initialization function to initialize ESMF through ESMPy,

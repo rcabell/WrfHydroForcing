@@ -19,7 +19,11 @@ class MpiConfig:
         """
         self.comm = None
         self.rank = None
-        self.size = None 
+        self.size = None
+        self.counts = None
+        self.offsets = None
+        self.total_rows = None
+        self.width = None
 
     def initialize_comm(self, config_options):
         """
@@ -131,7 +135,6 @@ class MpiConfig:
             :return:
         """
 
-
         # Determine which type of input array we have based on the
         # type of numpy array.
         data_type_flag = -1
@@ -211,7 +214,7 @@ class MpiConfig:
             self.comm.Scatterv( [sendbuf, counts, offsets, data_type], recvbuf, root=0)
         except:
             ConfigOptions.errMsg = "Failed Scatterv from rank 0"
-            err_handler.error_out(ConfigOptions)
+            err_handler.err_out(ConfigOptions)
             return None
 
         subarray = np.reshape(recvbuf,[y_upper[self.rank] -y_lower[self.rank],x_upper[self.rank]- x_lower[self.rank]]).copy()
@@ -221,50 +224,50 @@ class MpiConfig:
     scatter_array = scatter_array_scatterv_no_cache
 
     def merge_slabs_gatherv(self, local_slab, options):
+        if self.counts is None:
+            # gather buffer offsets and bounds to rank 0
+            shapes = np.array([np.int32(local_slab.shape[0]), np.int32(local_slab.shape[1])])
+            global_shapes = np.zeros((self.size * 2), np.int32)
 
-        # gather buffer offsets and bounds to rank 0
-        shapes = np.array([np.int32(local_slab.shape[0]), np.int32(local_slab.shape[1])])
-        global_shapes = np.zeros((self.size * 2), np.int32)
-
-        try:
-            self.comm.Allgather([shapes, MPI.INTEGER], [global_shapes, MPI.INTEGER])
-        except:
-            options.errMsg ="Failed all gathering slab shapes at rank" + str(self.rank)
-            err_handler.log_critical(options,self)
-            global_bounds = None
-        
-        #options.errMsg = "All gather for global shapes complete"
-        #err_handler.log_msg(options,self)
-
-        width = global_shapes[1]
-
-        # check that all slabes are the same width and sum the number of rows
-        total_rows = 0
-        for i in range(0,self.size):
-            total_rows += global_shapes[2*i]
-            if global_shapes[(2*i)+1] != width:
-                options.errMsg = "Error: slabs with differing widths detected on slab for rank" + str(i)
+            try:
+                self.comm.Allgather([shapes, MPI.INTEGER], [global_shapes, MPI.INTEGER])
+            except:
+                options.errMsg ="Failed all gathering slab shapes at rank" + str(self.rank)
                 err_handler.log_critical(options,self)
-                self.comm.abort()
+                global_bounds = None
 
-        #options.errMsg = "Checking of Rows and Columns complete"
-        #err_handler.log_msg(options,self)
+            #options.errMsg = "All gather for global shapes complete"
+            #err_handler.log_msg(options,self)
 
-        # generate counts
-        counts = [ global_shapes[i*2] * global_shapes[(i*2)+1]
-                   for i in range(0,self.size)]
+            self.width = global_shapes[1]
 
-        #generate offsets:
-        offsets = [0]
-        for i in range(0, len(counts) -1 ):
-            offsets.append(offsets[i] + counts[i])
+            # check that all slabes are the same width and sum the number of rows
+            self.total_rows = 0
+            for i in range(0,self.size):
+                self.total_rows += global_shapes[2*i]
+                if global_shapes[(2*i)+1] != self.width:
+                    options.errMsg = "Error: slabs with differing widths detected on slab for rank" + str(i)
+                    err_handler.log_critical(options,self)
+                    self.comm.abort()
 
-        #options.errMsg = "Counts and Offsets generated"
-        #err_handler.log_msg(options,self)
+            #options.errMsg = "Checking of Rows and Columns complete"
+            #err_handler.log_msg(options,self)
+
+            # generate counts
+            self.counts = [ global_shapes[i*2] * global_shapes[(i*2)+1]
+                       for i in range(0,self.size)]
+
+            #generate offsets:
+            self.offsets = [0]
+            for i in range(0, len(self.counts) - 1):
+                self.offsets.append(self.offsets[i] + self.counts[i])
+
+            #options.errMsg = "Counts and Offsets generated"
+            #err_handler.log_msg(options,self)
 
         # create the receive buffer
         if self.rank == 0:
-            recvbuf = np.empty([total_rows, width], local_slab.dtype)
+            recvbuf = np.empty([self.total_rows, self.width], local_slab.dtype)
         else:
             recvbuf = None
 
@@ -279,7 +282,7 @@ class MpiConfig:
 
         # get the data with Gatherv
         try:
-            self.comm.Gatherv(sendbuf=local_slab, recvbuf=[recvbuf, counts, offsets, data_type], root=0)
+            self.comm.Gatherv(sendbuf=local_slab, recvbuf=[recvbuf, self.counts, self.offsets, data_type], root=0)
         except:
             options.errMsg = "Failed to Gatherv to rank 0 from rank " + str(self.rank)
             err_handler.log_critical(options,self)

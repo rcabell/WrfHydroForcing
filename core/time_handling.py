@@ -5,6 +5,8 @@ import math
 from operator import truediv
 import os
 import glob
+from os import path
+
 import numpy as np
 from core import err_handler
 from core.err_handler import root_print
@@ -860,7 +862,7 @@ def find_input_neighbors(input_forcings, config_options, d_current, mpi_config):
                                    "files for this output timestep" % input_forcings.productName
         err_handler.log_msg(config_options, mpi_config)
 
-   
+
     # First find the current input forecast cycle that we are using.
     ana_offset = 1 if config_options.ana_flag else 0
     current_input_cycle = config_options.current_fcst_cycle - datetime.timedelta(
@@ -873,7 +875,7 @@ def find_input_neighbors(input_forcings, config_options, d_current, mpi_config):
         config_options.errMsg = "User has specified a forecast horizon " + \
                                 "that is greater than the maximum allowed hours of: " + str(input_horizon)
         err_handler.log_critical(config_options, mpi_config)
-    
+
     #err_handler.check_program_status(config_options, mpi_config)
     #d_current = d_current + datetime.timedelta(seconds=input_forcings.currentFcstOffset * 60.0 * 60.0)
     # Calculate the current forecast hour within this Input cycle.
@@ -1635,7 +1637,7 @@ def find_custom_freq_neighbors(supplemental_precip, config_options, d_current, m
         tmp_file1 = supplemental_precip.inDir + '/' + \
             supplemental_precip.pcp_date1.strftime('%Y%m%d') + '/' \
             'MRMS_PrecipRate_00.00_' + supplemental_precip.pcp_date1.strftime('%Y%m%d-%H%M%S') +  \
-            supplemental_precip.file_ext + ('.gz' if supplemental_precip.fileType != NETCDF else '') 
+            supplemental_precip.file_ext + ('.gz' if supplemental_precip.fileType != NETCDF else '')
         tmp_file2 = supplemental_precip.inDir + '/' + \
             supplemental_precip.pcp_date2.strftime('%Y%m%d') + '/' \
             'MRMS_PrecipRate_00.00_' + supplemental_precip.pcp_date2.strftime('%Y%m%d-%H%M%S') +  \

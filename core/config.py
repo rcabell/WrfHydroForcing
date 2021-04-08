@@ -133,7 +133,7 @@ class ConfigOptions:
         if self.number_supp_pcp == 1:
             if int(self.supp_precip_forcings[0]) == 13:
                 self.precip_only_flag = True
-        
+
         if self.precip_only_flag == False:
             # Read in the base input forcing options as an array of values to map.
             try:
@@ -177,7 +177,7 @@ class ConfigOptions:
                     err_handler.err_out_screen('Invalid forcing file type "{}" specified. '
                                                'Only GRIB1, GRIB2, and NETCDF are supported'.format(fileType))
 
-       
+
             # Read in the input directories for each forcing option.
             try:
                 self.input_force_dirs = config.get('Input', 'InputForcingDirectories').split(',')
@@ -428,7 +428,7 @@ class ConfigOptions:
             if self.e_date_proc == -9999 and self.b_date_proc != -9999:
                 err_handler.err_out_screen('If choosing retrospective forcings, dates must not be -9999')
 
-           
+
             # Calculate the number of output time steps
             if self.sub_output_hour == None:
                 dt_tmp = self.e_date_proc - self.b_date_proc

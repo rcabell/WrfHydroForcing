@@ -275,9 +275,9 @@ def find_aorc_neighbors(input_forcings, config_options, d_current, mpi_config):
             input_forcings.regridded_forcings2[:, :, :] = config_options.globalNdv
 
 
-def find_ak_ext_ana_neighbors(input_forcings, config_options, d_current, mpi_config):
+def find_ldasin_neighbors(input_forcings, config_options, d_current, mpi_config):
     """
-    Function to calculate the previous and after Alaska Extended Ana cycles based on the current timestep.
+    Function to calculate the previous and after LDASIN cycles based on the current timestep.
     ExtAna inputs are outputs from a prior FE run.
     :param input_forcings:
     :param config_options:
@@ -286,7 +286,7 @@ def find_ak_ext_ana_neighbors(input_forcings, config_options, d_current, mpi_con
     :return:
     """
     if mpi_config.rank == 0:
-        config_options.statusMsg = "Processing Alaska ExtAnA Data. Calculating neighboring " \
+        config_options.statusMsg = "Processing LDASIN Data. Calculating neighboring " \
                                    "files for this output timestep"
         err_handler.log_msg(config_options, mpi_config)
 
@@ -300,7 +300,7 @@ def find_ak_ext_ana_neighbors(input_forcings, config_options, d_current, mpi_con
     # If the user has specified a forcing horizon that is greater than what is available
     # for this time period, throw an error.
     if (input_forcings.userFcstHorizon + input_forcings.userCycleOffset) / 60.0 > ext_ana_horizon:
-        config_options.errMsg = "User has specified a ExtAnA conus forecast horizon " + \
+        config_options.errMsg = "User has specified LDASIN forecast horizon " + \
                                 "that is greater than the maximum allowed hours of: " + str(ext_ana_horizon)
         err_handler.log_critical(config_options, mpi_config)
     err_handler.check_program_status(config_options, mpi_config)
@@ -350,7 +350,7 @@ def find_ak_ext_ana_neighbors(input_forcings, config_options, d_current, mpi_con
                 ".LDASIN_DOMAIN1"
     if mpi_config.rank == 0:
         if mpi_config.rank == 0:
-            config_options.statusMsg = "Next ExtAnA file being used: " + tmp_file2
+            config_options.statusMsg = "Next LDASIN file being used: " + tmp_file2
             err_handler.log_msg(config_options, mpi_config)
     err_handler.check_program_status(config_options, mpi_config)
 
@@ -392,10 +392,10 @@ def find_ak_ext_ana_neighbors(input_forcings, config_options, d_current, mpi_con
     if mpi_config.rank == 0:
         if not os.path.exists(input_forcings.file_in2):
             if input_forcings.enforce == 1:
-                config_options.errMsg = "Expected input ExtAnA file: " + input_forcings.file_in2 + " not found."
+                config_options.errMsg = "Expected input LDASIN file: " + input_forcings.file_in2 + " not found."
                 err_handler.log_critical(config_options, mpi_config)
             else:
-                config_options.statusMsg = "Expected input ExtAnA file: " + input_forcings.file_in2 + " not found. " \
+                config_options.statusMsg = "Expected input LDASIN file: " + input_forcings.file_in2 + " not found. " \
                                                                                                    "Will not use in " \
                                                                                                    "final layering."
                 err_handler.log_warning(config_options, mpi_config)

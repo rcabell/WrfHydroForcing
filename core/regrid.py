@@ -51,9 +51,9 @@ def create_link(name, input_file, tmpFile, config_options, mpi_config):
     err_handler.check_program_status(config_options, mpi_config)
 
 
-def regrid_ak_ext_ana(input_forcings, config_options, wrf_hydro_geo_meta, mpi_config):
+def regrid_ldasin(input_forcings, config_options, wrf_hydro_geo_meta, mpi_config):
     """
-    Function for handling regridding of Alaska ExtAna data. Data was already regridded in the prior run of the AnA stage so just read data in.
+    Function for handling "regridding" of existing LDASIN data.
     :param input_forcings:
     :param config_options:
     :param wrf_hydro_geo_meta:
@@ -64,7 +64,7 @@ def regrid_ak_ext_ana(input_forcings, config_options, wrf_hydro_geo_meta, mpi_co
     # exit out of this routine as the regridded fields have already been set to NDV.
     if not os.path.isfile(input_forcings.file_in2):
         if mpi_config.rank == 0:
-            config_options.statusMsg = "No AK AnA in_2 file found for this timestep."
+            config_options.statusMsg = "No LDASIN file found for this timestep."
             err_handler.log_msg(config_options, mpi_config)
         err_handler.log_msg(config_options, mpi_config)
         return
@@ -74,7 +74,7 @@ def regrid_ak_ext_ana(input_forcings, config_options, wrf_hydro_geo_meta, mpi_co
     # inputs have already been regridded and we can move on.
     if input_forcings.regridComplete:
         if mpi_config.rank == 0:
-            config_options.statusMsg = "No AK AnA regridding required for this timestep."
+            config_options.statusMsg = "No LDASIN regridding required for this timestep."
             err_handler.log_msg(config_options, mpi_config)
         err_handler.log_msg(config_options, mpi_config)
         return
@@ -133,7 +133,7 @@ def regrid_ak_ext_ana(input_forcings, config_options, wrf_hydro_geo_meta, mpi_co
     for force_count, nc_var in enumerate(input_forcings.netcdf_var_names):
         var_tmp = None
         if mpi_config.rank == 0:
-            config_options.statusMsg = f"Processing input AK AnA variable: {nc_var} from {input_forcings.file_in2}"
+            config_options.statusMsg = f"Processing input LDASIN variable: {nc_var} from {input_forcings.file_in2}"
             err_handler.log_msg(config_options, mpi_config)
             print(config_options.statusMsg,flush=True)
             try:
@@ -150,7 +150,7 @@ def regrid_ak_ext_ana(input_forcings, config_options, wrf_hydro_geo_meta, mpi_co
         try:
             input_forcings.regridded_forcings2[input_forcings.input_map_output[force_count], :, :] = var_sub_tmp
         except (ValueError, KeyError, AttributeError) as err:
-            config_options.errMsg = "Unable to extract ExtAnA forcing data from the AK AnA field: " + str(err)
+            config_options.errMsg = "Unable to extract forcing data from the LDASIN field: " + str(err)
             err_handler.log_critical(config_options, mpi_config)
         err_handler.check_program_status(config_options, mpi_config)
         # If we are on the first timestep, set the previous regridded field to be

@@ -135,7 +135,7 @@ class input_forcings:
             17: "NAM_Nest_3km_PuertoRico_Radiation-Only",
             18: "WRF_ARW_PuertoRico_GRIB2",
             19: "HRRR_Alaska_GRIB2",
-            20: "Alaska_ExtAnA"
+            20: "LDASIN_Passthrough"
         }
         self.productName = product_names[self.keyValue]
 
@@ -169,6 +169,9 @@ class input_forcings:
             self.file_ext = '.grib2'
         elif self.fileType == 'NETCDF':
             self.file_ext = '.nc'
+        
+        if self.productName == 'LDASIN_Passthrough':
+            self.file_ext = ''      # no extension on LDASIN netCDF files
 
         cycle_freq_minutes = {
             1: 60,
@@ -225,8 +228,7 @@ class input_forcings:
             18: ['TMP', 'SPFH', 'UGRD', 'VGRD', 'APCP', 'PRES'],
             19: ['TMP', 'SPFH', 'UGRD', 'VGRD', 'APCP', 'DSWRF',
                 'DLWRF', 'PRES'],
-            20: ['U2D', 'V2D', 'LWDOWN', 'RAINRATE', 'T2D',
-                 'Q2D', 'PSFC', 'SWDOWN']
+            20: None
         }
         self.grib_vars = grib_vars_in[self.keyValue]
 
@@ -421,7 +423,7 @@ class input_forcings:
             17: time_handling.find_nam_nest_neighbors,
             18: time_handling.find_hourly_wrf_arw_neighbors,
             19: time_handling.find_ak_hrrr_neighbors,
-            20: time_handling.find_ak_ext_ana_neighbors,
+            20: time_handling.find_ldasin_neighbors
         }
 
         find_neighbor_files[self.keyValue](self, ConfigOptions, dCurrent,MpiConfig)
@@ -456,7 +458,7 @@ class input_forcings:
             17: regrid.regrid_nam_nest,
             18: regrid.regrid_hourly_wrf_arw,
             19: regrid.regrid_conus_hrrr,
-            20: regrid.regrid_ak_ext_ana
+            20: regrid.regrid_ldasin
         }
         regrid_inputs[self.keyValue](self,ConfigOptions,wrfHyroGeoMeta,MpiConfig)
 

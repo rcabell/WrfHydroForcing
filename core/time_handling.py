@@ -571,28 +571,16 @@ def find_ak_hrrr_neighbors(input_forcings, config_options, d_current, mpi_config
     six_hr_horizon = 48  # 48-hour forecasts every six hours.
 
     # First find the current HRRR AK forecast cycle that we are using.
-    if config_options.ana_flag:
-        shift = config_options.first_fcst_cycle.hour % 3
-        current_hrrr_cycle = config_options.first_fcst_cycle - datetime.timedelta(seconds=3600*shift)
-        if shift == 0:
-            current_hrrr_cycle -= datetime.timedelta(hours=6)
-        else:
-            current_hrrr_cycle -= datetime.timedelta(hours=3)
-
-        # Calculate the current forecast hour within this HRRR cycle.
-        dt_tmp = d_current - current_hrrr_cycle
-        current_hrrr_hour = int(dt_tmp.days * 24) + int(dt_tmp.seconds / 3600.0)
+    shift = config_options.first_fcst_cycle.hour % 3
+    current_hrrr_cycle = config_options.first_fcst_cycle - datetime.timedelta(seconds=3600*shift)
+    if shift == 0 and config_options.ana_flag:
+        current_hrrr_cycle -= datetime.timedelta(hours=6)
     else:
-        current_hrrr_cycle = config_options.current_fcst_cycle - \
-            datetime.timedelta(seconds=input_forcings.userCycleOffset * 60.0)
+        current_hrrr_cycle -= datetime.timedelta(hours=3)
 
-        # Map the native forecast hour to the shifted HRRR cycles
-        hrrr_cycle = (current_hrrr_cycle.hour // 3 * 3) - 3
-        if hrrr_cycle < 0:
-            hrrr_cycle += 24
-
-        # throw out the first 3 hours of the cycle
-        current_hrrr_hour = (current_hrrr_cycle.hour % 3) + 3
+    # Calculate the current forecast hour within this HRRR cycle.
+    dt_tmp = d_current - current_hrrr_cycle
+    current_hrrr_hour = int(dt_tmp.days * 24) + int(dt_tmp.seconds / 3600.0)
     
     #if current_hrrr_cycle.hour % 6 == 0:
     #    hrrr_horizon = 48

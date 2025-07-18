@@ -3590,19 +3590,19 @@ def calculate_weights(id_tmp, force_count, input_forcings, config_options, mpi_c
     lon_tmp = None
     if mpi_config.rank == 0:
         # Process lat/lon values from the GFS grid.
-        if len(id_tmp.variables[lat_var].shape) == 3:
+        if len(lat_var.shape) == 3:
             # We have 2D grids already in place.
-            lat_tmp = id_tmp.variables[lat_var][0, :, :]
-            lon_tmp = id_tmp.variables[lon_var][0, :, :]
-        elif len(id_tmp.variables[lon_var].shape) == 2:
+            lat_tmp = lat_var[0, :, :]
+            lon_tmp = lon_var[0, :, :]
+        elif len(lon_var.shape) == 2:
             # We have 2D grids already in place.
-            lat_tmp = id_tmp.variables[lat_var][:, :]
-            lon_tmp = id_tmp.variables[lon_var][:, :]
+            lat_tmp = lat_var[:, :]
+            lon_tmp = lon_var[:, :]
         elif len(id_tmp.variables[lat_var].shape) == 1:
             # We have 1D lat/lons we need to translate into
             # 2D grids.
-            lat_tmp = np.repeat(id_tmp.variables[lat_var][:][:, np.newaxis], input_forcings.nx_global, axis=1)
-            lon_tmp = np.tile(id_tmp.variables[lon_var][:], (input_forcings.ny_global, 1))
+            lat_tmp = np.repeat(lat_var[:][:, np.newaxis], input_forcings.nx_global, axis=1)
+            lon_tmp = np.tile(lon_var[:], (input_forcings.ny_global, 1))
     err_handler.check_program_status(config_options, mpi_config)
 
     # Scatter global GFS latitude grid to processors..

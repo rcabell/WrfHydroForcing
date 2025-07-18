@@ -8,7 +8,7 @@ import numpy as np
 from core import time_handling
 from core import err_handler
 
-FORCE_COUNT = 23
+FORCE_COUNT = 24
 
 class ConfigOptions:
     """
@@ -704,7 +704,7 @@ class ConfigOptions:
                                            self.spatial_meta)
         # Check for the optional grid metadata file.
         try:
-            self.grid_meta = config['Geospatial'].get('GridMeta', '')
+            self.grid_meta = config['Input'].get('InputGridMeta', '')
         except KeyError:
             err_handler.err_out_screen('Unable to locate Geospatial section  in the configuration file.')
         if len(self.grid_meta) == 0:
@@ -883,7 +883,7 @@ class ConfigOptions:
                                            'section of the configuration file.')
             except json.decoder.JSONDecodeError:
                 err_handler.err_out_screen('Improper PrecipDownscaling options specified in the configuration file.')
-            
+
             if len(self.precipDownscaleOpt) != self.number_inputs:
                 err_handler.err_out_screen('Please specify PrecipDownscaling values for each corresponding '
                                                'input forcings in the configuration file.')

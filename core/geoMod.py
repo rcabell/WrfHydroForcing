@@ -94,9 +94,9 @@ class GeoMetaWrfHydro:
 
             try:
                 self.dx_meters = idTmp.DX
-            except:
+            except Exception as e:
                 ConfigOptions.errMsg = "Unable to extract DX global attribute " + \
-                                       " in: " + ConfigOptions.geogrid
+                                       " in: " + ConfigOptions.geogrid + f"({e})"
                 raise Exception
 
             try:

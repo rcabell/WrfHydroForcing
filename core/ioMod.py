@@ -841,12 +841,18 @@ def open_netcdf_forcing(NetCdfFileIn, ConfigOptions, MpiConfig, open_on_all_proc
 
     # Open the NetCDF file on the master processor and read in data.
     if MpiConfig.rank == 0 or open_on_all_procs:
+        found_lat_lon = False
+
         # Ensure file exists.
         if not os.path.isfile(NetCdfFileIn):
             ConfigOptions.errMsg = "Expected NetCDF file: " + NetCdfFileIn + \
                                     " not found."
             err_handler.log_critical(ConfigOptions, MpiConfig)
             idTmp = None
+
+        if ConfigOptions.grid_meta is not None:
+            with Dataset(ConfigOptions.grid_meta) as gmds:
+                found_lat_lon = 'nodeCoords' in gmds.variables
 
         # Open the NetCDF file.
         try:
@@ -857,19 +863,20 @@ def open_netcdf_forcing(NetCdfFileIn, ConfigOptions, MpiConfig, open_on_all_proc
             err_handler.log_critical(ConfigOptions, MpiConfig)
             idTmp = None
 
-        if idTmp is not None:
-            # Check for expected lat/lon variables.
-            if lat_var not in idTmp.variables.keys():
-                ConfigOptions.errMsg = f"Unable to locate {lat_var} from: " + \
-                                        NetCdfFileIn
-                err_handler.log_critical(ConfigOptions, MpiConfig)
-                idTmp = None
-        if idTmp is not None:
-            if lon_var not in idTmp.variables.keys():
-                ConfigOptions.errMsg = f"Unable to locate {lon_var} from: " + \
-                                        NetCdfFileIn
-                err_handler.log_critical(ConfigOptions, MpiConfig)
-                idTmp = None
+        if not found_lat_lon:
+            if idTmp is not None:
+                # Check for expected lat/lon variables.
+                if lat_var not in idTmp.variables.keys():
+                    ConfigOptions.errMsg = f"Unable to locate {lat_var} from: " + \
+                                            NetCdfFileIn
+                    err_handler.log_critical(ConfigOptions, MpiConfig)
+                    idTmp = None
+            if idTmp is not None:
+                if lon_var not in idTmp.variables.keys():
+                    ConfigOptions.errMsg = f"Unable to locate {lon_var} from: " + \
+                                            NetCdfFileIn
+                    err_handler.log_critical(ConfigOptions, MpiConfig)
+                    idTmp = None
     else:
         idTmp = None
 

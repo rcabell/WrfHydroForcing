@@ -46,7 +46,7 @@ def process_forecasts(ConfigOptions, wrfHydroGeoMeta, inputForcingMod, suppPcpMo
             fcstCycleOutDir = ConfigOptions.output_dir + "/" + ConfigOptions.e_date_proc.strftime('%Y%m%d%H')
         else:
             fcstCycleOutDir = ConfigOptions.output_dir + "/" + ConfigOptions.current_fcst_cycle.strftime('%Y%m%d%H')
-        
+
         if(ConfigOptions.precip_only_flag == False):
             # reset skips if present
             for forceKey in ConfigOptions.input_forcings:
@@ -129,7 +129,7 @@ def process_forecasts(ConfigOptions, wrfHydroGeoMeta, inputForcingMod, suppPcpMo
                 OutputObj.output_local[:, :, :] = ConfigOptions.globalNdv
 
                 ConfigOptions.current_output_step = outStep
-            
+
                 if(ConfigOptions.sub_output_hour != None):
                     subOutDate = ConfigOptions.first_fcst_cycle + datetime.timedelta(hours=ConfigOptions.sub_output_hour)
                 OutputObj.outDate = ConfigOptions.current_fcst_cycle + datetime.timedelta(
@@ -142,7 +142,7 @@ def process_forecasts(ConfigOptions, wrfHydroGeoMeta, inputForcingMod, suppPcpMo
                         subCount = subCount + 1
                         OutputObj.outDate = ConfigOptions.current_fcst_cycle + datetime.timedelta(
                             seconds=(ConfigOptions.sub_output_hour*60*60) + ConfigOptions.sub_output_freq * 60 * subCount)
-            
+
                 ConfigOptions.current_output_date = OutputObj.outDate
                 # if AnA, adjust file date for analysis vs forecast
                 if ConfigOptions.ana_flag:
@@ -162,7 +162,7 @@ def process_forecasts(ConfigOptions, wrfHydroGeoMeta, inputForcingMod, suppPcpMo
                         else:
                             ConfigOptions.prev_output_date = ConfigOptions.current_output_date - datetime.timedelta(
                                                      seconds=ConfigOptions.output_freq * 60)
-                    else:    
+                    else:
                         ConfigOptions.prev_output_date = ConfigOptions.current_output_date - datetime.timedelta(
                                                      seconds=ConfigOptions.output_freq * 60)
                 if MpiConfig.rank == 0 and show_message:
@@ -241,7 +241,7 @@ def process_forecasts(ConfigOptions, wrfHydroGeoMeta, inputForcingMod, suppPcpMo
                         downscale.run_downscaling(input_forcings, ConfigOptions,
                                                   wrfHydroGeoMeta, MpiConfig)
                         err_handler.check_program_status(ConfigOptions, MpiConfig)
-     
+
                         # Layer in forcings from this product.
                         layeringMod.layer_final_forcings(OutputObj, input_forcings, ConfigOptions, MpiConfig)
                         err_handler.check_program_status(ConfigOptions, MpiConfig)
@@ -251,7 +251,7 @@ def process_forecasts(ConfigOptions, wrfHydroGeoMeta, inputForcingMod, suppPcpMo
                         if forceKey == 10:
                             ConfigOptions.currentCustomForceNum = ConfigOptions.currentCustomForceNum + 1
 
-                
+
                     # Process supplemental precipitation if we specified in the configuration file.
                     if ConfigOptions.number_supp_pcp > 0:
                         for suppPcpKey in ConfigOptions.supp_precip_forcings:
@@ -299,7 +299,7 @@ def process_forecasts(ConfigOptions, wrfHydroGeoMeta, inputForcingMod, suppPcpMo
                 ConfigOptions.current_output_step = outStep
                 OutputObj.outDate = ConfigOptions.current_fcst_cycle + datetime.timedelta(
                                     seconds=ConfigOptions.customSuppPcpFreq * 60 * outStep)
-                
+
                 ConfigOptions.current_output_date = OutputObj.outDate
                 # if AnA, adjust file date for analysis vs forecast
                 if ConfigOptions.ana_flag:
@@ -324,7 +324,7 @@ def process_forecasts(ConfigOptions, wrfHydroGeoMeta, inputForcingMod, suppPcpMo
                 # if so, continue to the next time step. Also initialize our output arrays if necessary.
                 OutputObj.suppOutPath = fcstCycleOutDir + "/" + file_date.strftime('%Y%m%d%H%M') + \
                                     ".PRECIP_FORCING.nc"
- 
+
                 if os.path.isfile(OutputObj.suppOutPath):
                     if MpiConfig.rank == 0:
                         ConfigOptions.statusMsg = "Output file: " + OutputObj.suppOutPath + " exists. Moving " + \
@@ -356,7 +356,7 @@ def process_forecasts(ConfigOptions, wrfHydroGeoMeta, inputForcingMod, suppPcpMo
                                 # Run temporal interpolation on the grids.
                                     suppPcpMod[suppPcpKey].temporal_interpolate_inputs(ConfigOptions, MpiConfig)
                                     err_handler.check_program_status(ConfigOptions, MpiConfig)
-           
+
                                 # Layer in the supplemental precipitation into the current output object.
                                     layeringMod.layer_supplemental_forcing(OutputObj, suppPcpMod[suppPcpKey],
                                             ConfigOptions, MpiConfig)
@@ -365,7 +365,7 @@ def process_forecasts(ConfigOptions, wrfHydroGeoMeta, inputForcingMod, suppPcpMo
                             OutputObj.outDate = file_date
                         OutputObj.output_final_custom_supp_precip(ConfigOptions, wrfHydroGeoMeta, MpiConfig)
                         err_handler.check_program_status(ConfigOptions, MpiConfig)
-  
+
         if (not ConfigOptions.ana_flag) or (fcstCycleNum == (ConfigOptions.nFcsts - 1)):
             if MpiConfig.rank == 0:
                 ConfigOptions.statusMsg = "Forcings complete for forecast cycle: " + \

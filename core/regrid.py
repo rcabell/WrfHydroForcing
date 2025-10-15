@@ -3398,11 +3398,18 @@ def check_regrid_status(id_tmp, force_count, input_forcings, config_options, wrf
             calc_regrid_flag = True
         else:
             if mpi_config.rank == 0:
-                if id_tmp.variables[input_forcings.netcdf_var_names[force_count]].shape[1] \
-                        != input_forcings.ny_global and \
-                        id_tmp.variables[input_forcings.netcdf_var_names[force_count]].shape[2] \
-                        != input_forcings.nx_global:
-                    calc_regrid_flag = True
+                if id_tmp.variables[input_forcings.netcdf_var_names[force_count]].ndim == 2:
+                    # Mesh (MPAS)
+                    if id_tmp.variables[input_forcings.netcdf_var_names[force_count]].shape[1] \
+                            != input_forcings.nx_global:
+                        calc_regrid_flag = True
+                else:
+                    # Grid
+                    if id_tmp.variables[input_forcings.netcdf_var_names[force_count]].shape[1] \
+                            != input_forcings.ny_global and \
+                            id_tmp.variables[input_forcings.netcdf_var_names[force_count]].shape[2] \
+                            != input_forcings.nx_global:
+                        calc_regrid_flag = True
     # mpi_config.comm.barrier()
 
     # Broadcast the flag to the other processors.

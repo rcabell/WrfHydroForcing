@@ -150,8 +150,14 @@ class ConfigOptions:
 
             # Check to make sure forcing options make sense
             for forceOpt in self.input_forcings:
-                if forceOpt < 0 or forceOpt > FORCE_COUNT:
-                    err_handler.err_out_screen(f'Please specify InputForcings values between 1 and {FORCE_COUNT}.')
+                if type(forceOpt) is int:
+                    if forceOpt < 0 or forceOpt > FORCE_COUNT:
+                        err_handler.err_out_screen(f'Please specify InputForcings values between 1 and {FORCE_COUNT}.')
+                elif type(forceOpt) is str:
+                    # TODO: check that it's one we recognize
+                    pass
+                else:
+                    err_handler.err_out_screen('Improper InputForcings option specified in configuration file')
 
             # Keep tabs on how many custom input forcings we have.
                 if forceOpt == 10:
@@ -883,7 +889,7 @@ class ConfigOptions:
                                            'section of the configuration file.')
             except json.decoder.JSONDecodeError:
                 err_handler.err_out_screen('Improper PrecipDownscaling options specified in the configuration file.')
-            
+
             if len(self.precipDownscaleOpt) != self.number_inputs:
                 err_handler.err_out_screen('Please specify PrecipDownscaling values for each corresponding '
                                                'input forcings in the configuration file.')

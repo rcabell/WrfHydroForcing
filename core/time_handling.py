@@ -2687,3 +2687,76 @@ def find_ndfd_neighbors(input_forcings, config_options, d_current, mpi_config):
     if file_missing:
         if input_forcings.regridded_forcings2 is not None:
             input_forcings.regridded_forcings2[:, :, :] = config_options.globalNdv
+
+def calculate_forcing_time(input_forcings, config_options, d_current, mpi_config):
+    # TODO: refactor this hot mess
+
+    if mpi_config.rank == 0:
+        config_options.statusMsg = f"Processing {input_forcings.productName} Input Data. Calculating neighboring " \
+                                   "files for this output timestep"
+        err_handler.log_msg(config_options, mpi_config)
+
+    # First find the current input forecast cycle that we are using.
+    ana_offset = 1 if config_options.ana_flag else 0
+    current_input_cycle = config_options.current_fcst_cycle - datetime.timedelta(
+        seconds=(ana_offset + input_forcings.userCycleOffset) * 60.0 * 60)
+
+    if input_forcings.forecast_horizons is not None:
+        input_horizon = input_forcings.forecast_horizons[current_input_cycle.hour]
+
+        # If the user has specified a forcing horizon that is greater than what is available
+        # for this time period, throw an error.
+        if (input_forcings.userFcstHorizon + input_forcings.userCycleOffset) / 60.0 > input_horizon:
+            config_options.errMsg = "User has specified a forecast horizon " + \
+                                    "that is greater than the maximum allowed hours of: " + str(input_horizon)
+            err_handler.log_critical(config_options, mpi_config)
+
+    #err_handler.check_program_status(config_options, mpi_config)
+    #d_current = d_current + datetime.timedelta(seconds=input_forcings.currentFcstOffset * 60.0 * 60.0)
+    # Calculate the current forecast hour within this Input cycle.
+    dt_tmp = d_current - current_input_cycle
+    current_input_hour = int(dt_tmp.days*24) + int(dt_tmp.seconds/3600.0)
+    current_input_min = int(dt_tmp.seconds/60.0)
+    # Calculate the previous file to process.
+    min_since_last_output = current_input_min % input_forcings.cycleFreq
+    if min_since_last_output == 0:
+        min_since_last_output = input_forcings.cycleFreq
+    prev_input_date = d_current - datetime.timedelta(seconds=min_since_last_output * 60)
+    input_forcings.fcst_date1 = prev_input_date
+    if min_since_last_output == input_forcings.cycleFreq:
+        min_until_next_output = 0
+    else:
+        min_until_next_output = input_forcings.cycleFreq - min_since_last_output
+    next_input_date = d_current + datetime.timedelta(seconds=min_until_next_output * 60)
+    input_forcings.fcst_date2 = next_input_date
+    dt_tmp = next_input_date - current_input_cycle
+    next_input_forecast_hour = int(dt_tmp.days * 24.0) + int(dt_tmp.seconds / 3600.0)
+    input_forcings.fcst_hour2 = next_input_forecast_hour
+    if next_input_forecast_hour == 0:
+        next_input_forecast_hour = 1
+    hr_flag = 0
+    if 0 < input_forcings.cycleFreq % 60 < 60:
+        if(next_input_forecast_hour>1 and next_input_date.minute == 0):
+            next_input_forecast_hour = next_input_forecast_hour - 1
+            hr_flag = 1
+        if(int(dt_tmp.seconds / 60.0)%60 == 0) and hr_flag == 1:
+            next_input_forecast_min = (next_input_forecast_hour - 1) * 60 + int(dt_tmp.seconds / (60.0 * (next_input_forecast_hour+1)))
+        elif(int(dt_tmp.seconds / 60.0)%60 == 0) and next_input_forecast_hour == 1:
+            next_input_forecast_min = (next_input_forecast_hour - 1) * 60 + int(dt_tmp.seconds / (60.0 * next_input_forecast_hour))
+        else:
+            next_input_forecast_min = (next_input_forecast_hour - 1) * 60 + int(dt_tmp.seconds / 60.0)%60
+        input_forcings.fcst_min2 = next_input_forecast_min
+    dt_tmp = prev_input_date - current_input_cycle
+    prev_input_forecast_hour = int(dt_tmp.days * 24.0) + int(dt_tmp.seconds / 3600.0)
+    input_forcings.fcst_hour1 = prev_input_forecast_hour
+    if prev_input_forecast_hour == 0:
+        prev_input_forecast_hour = 1
+    if 0 < input_forcings.cycleFreq % 60 < 60:
+        prev_input_forecast_min = (prev_input_forecast_hour - 1) * 60 + int(dt_tmp.seconds / 60.0)%60
+        input_forcings.fcst_min1 = prev_input_forecast_min
+    # If we are on the first forecast hour (1), and we have calculated the previous forecast
+    # hour to be 0, simply set both hours to be 1. Hour 0 will not produce the fields we need, and
+    # no interpolation is required.
+
+    err_handler.check_program_status(config_options, mpi_config)
+    return current_input_cycle, prev_input_forecast_hour, next_input_forecast_hour

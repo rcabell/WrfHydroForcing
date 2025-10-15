@@ -21,9 +21,6 @@ def main():
         The main execution of the program requires the user to compose
         a forcing configuration file that is parsed by this workflow.
         Please see documentation for further instructions.
-        Logan Karsten - National Center for Atmospheric Research
-                        karsten@ucar.edu
-                        303-497-2693
     """
     # Parse out the path to the configuration file.
     parser = argparse.ArgumentParser(description='Main calling program to generate WRF-Hydro Forcing')

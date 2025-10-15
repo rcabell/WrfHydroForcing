@@ -9,7 +9,9 @@ import numpy as np
 from core import time_handling
 from core import regrid
 from core import timeInterpMod
+from core.inputs import mpas
 
+MPAS = "MPAS"
 
 class input_forcings:
     """
@@ -140,7 +142,8 @@ class input_forcings:
             20: "Alaska_ExtAnA",
             21: "NBM",
             22: "NDFD",
-            23: "HRRR_15min"
+            23: "HRRR_15min",
+            MPAS: mpas.PRODUCT_NAME
         }
         self.productName = product_names[self.keyValue]
 
@@ -200,7 +203,8 @@ class input_forcings:
             20: 60,
             21: 60,
             22: 1440,
-            23: 15
+            23: 15,
+            MPAS: mpas.CYCLE_FREQ
         }
         self.cycleFreq = cycle_freq_minutes[self.keyValue]
 
@@ -240,7 +244,8 @@ class input_forcings:
             21: ['TMP', 'APCP'],
             22: ['TMP', 'WDIR', 'WSPD', 'APCP'],
             23: ['TMP', 'SPFH', 'UGRD', 'VGRD', 'APCP', 'DSWRF',
-                'DLWRF', 'PRES']
+                'DLWRF', 'PRES'],
+            MPAS: mpas.GRIB_VARS_IN
         }
         self.grib_vars = grib_vars_in[self.keyValue]
 
@@ -294,7 +299,8 @@ class input_forcings:
                  '10 m above ground', 'surface'],
             23: ['2 m above ground', '2 m above ground',
                 '10 m above ground', '10 m above ground',
-                'surface', 'surface', 'surface','surface']
+                'surface', 'surface', 'surface','surface'],
+            MPAS: mpas.GRIB_LEVELS_IN
 
         }
         self.grib_levels = grib_levels_in[self.keyValue]
@@ -366,7 +372,8 @@ class input_forcings:
             23: ['TMP_2maboveground', 'SPFH_2maboveground',
                 'UGRD_10maboveground', 'VGRD_10maboveground',
                 'APCP_surface', 'DSWRF_surface', 'DLWRF_surface',
-                'PRES_surface']
+                'PRES_surface'],
+            MPAS: mpas.NETCDF_VARS
         }
         self.netcdf_var_names = netcdf_variables[self.keyValue]
 
@@ -395,7 +402,8 @@ class input_forcings:
             20: None,
             21: None,
             22: None,
-            23: None
+            23: None,
+            MPAS: mpas.GRIB_MSG_INDEX
         }
         self.grib_mes_idx = grib_message_idx[self.keyValue]
 
@@ -423,7 +431,8 @@ class input_forcings:
             20: [0,1,2,3,4,5,6,7],
             21: [4, 3],
             22: [4,0,1,3],
-            23: [4,5,0,1,3,7,2,6]
+            23: [4,5,0,1,3,7,2,6],
+            MPAS: mpas.INPUT_MAP_TO_OUTPUTS
         }
         self.input_map_output = input_map_to_outputs[self.keyValue]
 
@@ -450,7 +459,8 @@ class input_forcings:
             20: None,
             21: None,
             22: None,
-            23: [18, 18, 18, 18, 18, 18, 36, 18, 18, 18, 18, 18, 36, 18, 18, 18, 18, 18, 36, 18, 18, 18, 18, 18]
+            23: [18, 18, 18, 18, 18, 18, 36, 18, 18, 18, 18, 18, 36, 18, 18, 18, 18, 18, 36, 18, 18, 18, 18, 18],
+            MPAS: None
         }
         self.forecast_horizons = forecast_horizons[self.keyValue]
 
@@ -486,7 +496,8 @@ class input_forcings:
             20: time_handling.find_ak_ext_ana_neighbors,
             21: time_handling.find_hourly_nbm_neighbors,
             22: time_handling.find_ndfd_neighbors,
-            23: time_handling.find_input_neighbors
+            23: time_handling.find_input_neighbors,
+            MPAS: mpas.find_neighbors
         }
 
         find_neighbor_files[self.keyValue](self, ConfigOptions, dCurrent,MpiConfig)
@@ -524,7 +535,8 @@ class input_forcings:
             20: regrid.regrid_ak_ext_ana,
             21: regrid.regrid_hourly_nbm,
             22: regrid.regrid_ndfd,
-            23: regrid.regrid_conus_hrrr
+            23: regrid.regrid_conus_hrrr,
+            MPAS: mpas.regrid_inputs
         }
         regrid_inputs[self.keyValue](self,ConfigOptions,wrfHyroGeoMeta,MpiConfig)
 

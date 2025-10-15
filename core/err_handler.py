@@ -93,7 +93,10 @@ def init_log(ConfigOptions,MpiConfig):
         ConfigOptions.errMsg = "Unable to establish formatting for logger."
         err_out_screen_para(ConfigOptions.errMsg,MpiConfig)
     try:
-        ConfigOptions.logHandle = logging.FileHandler(ConfigOptions.logFile,mode='a')
+        if os.environ.get('MFE_DEBUG', False) == "1":
+            ConfigOptions.logHandle = logging.StreamHandler()
+        else:
+            ConfigOptions.logHandle = logging.FileHandler(ConfigOptions.logFile,mode='a')
     except:
         ConfigOptions.errMsg = "Unable to create log file handle for: " + \
             ConfigOptions.logFile

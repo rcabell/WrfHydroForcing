@@ -177,8 +177,14 @@ class MpiConfig:
         x_upper = global_bounds[2:(self.size * 4) + 2:4]
         y_upper = global_bounds[3:(self.size * 4) + 3:4]
 
+        if self.rank == 0:
+            src_shape = np.array(len(src_array.shape), np.int8)
+        else:
+            src_shape = np.empty(1, np.int8)
+        self.comm.Bcast(src_shape, 0)
+
         # generate counts
-        if len(src_array.shape) == 1:
+        if src_shape == 1:
             counts = [(x_upper[i] - x_lower[i]) for i in range(0,self.size)]
         else:
             counts = [(y_upper[i] - y_lower[i]) * (x_upper[i] - x_lower[i])
@@ -224,7 +230,7 @@ class MpiConfig:
             err_handler.error_out(ConfigOptions)
             return None
 
-        if len(src_array.shape) == 1:
+        if src_shape == 1:
             subarray = np.reshape(recvbuf,x_upper[self.rank]- x_lower[self.rank]).copy()
         else:
             subarray = np.reshape(recvbuf,[y_upper[self.rank] -y_lower[self.rank],x_upper[self.rank]- x_lower[self.rank]]).copy()

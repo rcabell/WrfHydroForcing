@@ -27,7 +27,7 @@ def find_neighbors(input_forcings, config_options, d_current, mpi_config):
     current_input_cycle, prev_input_forecast_hour, next_input_forecast_hour = time_handling.calculate_forcing_time(input_forcings, config_options, d_current, mpi_config)
 
     # TODO: This is brittle and may not span over 00Z correctly... use input forecast datetime
-    pattern1 = f"{input_forcings.inDir}/diag_sfc.{current_input_cycle.strftime('%Y-%m-%d')}_{str(prev_input_forecast_hour).zfill(2)}.00.00.nc"
+    pattern1 = f"{input_forcings.inDir}/diag_sfc.{current_input_cycle.strftime('%Y-%m-%d')}_{str(current_input_cycle.hour).zfill(2)}.00.00.nc"
     files1 = glob.glob(pattern1)
 
     if len(files1) > 0:
@@ -37,7 +37,7 @@ def find_neighbors(input_forcings, config_options, d_current, mpi_config):
             err_handler.log_msg(config_options, mpi_config)
     else:
         if mpi_config.rank == 0:
-            config_options.errMsg = f"Next input file {pattern1} not found"
+            config_options.errMsg = f"Previous input file {pattern1} not found"
             err_handler.log_critical(config_options, mpi_config)
     err_handler.check_program_status(config_options, mpi_config)
 
@@ -92,24 +92,24 @@ def find_neighbors(input_forcings, config_options, d_current, mpi_config):
 
     # Ensure we have the necessary new file
     if mpi_config.rank == 0:
-        if not os.path.exists(input_forcings.file_in2):
+        if not os.path.exists(input_forcings.file_in1):
             if input_forcings.enforce == 1:
-                config_options.errMsg = "Expected input file: " + input_forcings.file_in2 + " not found."
+                config_options.errMsg = "Expected input file: " + input_forcings.file_in1 + " not found."
                 err_handler.log_critical(config_options, mpi_config)
             else:
-                config_options.statusMsg = "Expected input file: " + input_forcings.file_in2 + " not found. " \
+                config_options.statusMsg = "Expected input file: " + input_forcings.file_in1 + " not found. " \
                                                                                                    "Will not use in " \
                                                                                                    "final layering."
                 err_handler.log_warning(config_options, mpi_config)
     err_handler.check_program_status(config_options, mpi_config)
 
     # If the file is missing, set the local slab of arrays to missing.
-    if not os.path.exists(input_forcings.file_in2):
+    if not os.path.exists(input_forcings.file_in1):
         if input_forcings.regridded_forcings2 is not None:
             input_forcings.regridded_forcings2[:, :, :] = config_options.globalNdv
 
 def regrid_inputs(input_forcings, config_options, wrf_hydro_geo_meta, mpi_config):
-    if not os.path.isfile(input_forcings.file_in2):
+    if not os.path.isfile(input_forcings.file_in1):
         return
 
     if input_forcings.regridComplete:
@@ -118,7 +118,7 @@ def regrid_inputs(input_forcings, config_options, wrf_hydro_geo_meta, mpi_config
             err_handler.log_msg(config_options, mpi_config)
         return
 
-    id_tmp = ioMod.open_netcdf_forcing(input_forcings.file_in2, config_options, mpi_config,
+    id_tmp = ioMod.open_netcdf_forcing(input_forcings.file_in1, config_options, mpi_config,
                                                          open_on_all_procs=True)
 
     for force_count, nc_var in enumerate(input_forcings.grib_vars):
@@ -133,26 +133,10 @@ def regrid_inputs(input_forcings, config_options, wrf_hydro_geo_meta, mpi_config
 
         # TODO: get height from native MPAS mesh to support downscaling etc
 
-        var_tmp = None
-        if mpi_config.rank == 0:
-            try:
-                var_tmp = id_tmp.variables[input_forcings.netcdf_var_names[force_count]][0, :]
-            except (ValueError, KeyError, AttributeError) as err:
-                config_options.errMsg = "Unable to extract: " + input_forcings.netcdf_var_names[force_count] + \
-                                        " from: " + input_forcings.tmpFile + " (" + str(err) + ")"
-                err_handler.log_critical(config_options, mpi_config)
-        err_handler.check_program_status(config_options, mpi_config)
-
-        var_sub_tmp = mpi_config.scatter_array(input_forcings, var_tmp, config_options)
-        err_handler.check_program_status(config_options, mpi_config)
-
-        try:
-            input_forcings.esmf_field_in.data[:] = var_sub_tmp
-
-        except (ValueError, KeyError, AttributeError) as err:
-            config_options.errMsg = "Unable to place input MPAS data into ESMF field: " + str(err)
-            err_handler.log_critical(config_options, mpi_config)
-        err_handler.check_program_status(config_options, mpi_config)
+        # read netCDF variable per-process
+        input_forcings.esmf_field_in.read(input_forcings.file_in1, nc_var, 1)
+        if nc_var in ("rainc","rainnc"):
+             input_forcings.esmf_field_in.data[:] /= 3600     # convert hourly accumulated precip to instantaneous rate
 
         if mpi_config.rank == 0:
             config_options.statusMsg = "Regridding input MPAS Field: " + input_forcings.netcdf_var_names[force_count]
@@ -161,7 +145,7 @@ def regrid_inputs(input_forcings, config_options, wrf_hydro_geo_meta, mpi_config
             input_forcings.esmf_field_out = input_forcings.regridObj(input_forcings.esmf_field_in,
                                                                      input_forcings.esmf_field_out)
         except ValueError as ve:
-            config_options.errMsg = "Unable to regrid input MPA forcing data: " + str(ve)
+            config_options.errMsg = "Unable to regrid input MPAS forcing data: " + str(ve)
             err_handler.log_critical(config_options, mpi_config)
         err_handler.check_program_status(config_options, mpi_config)
 
@@ -171,7 +155,7 @@ def regrid_inputs(input_forcings, config_options, wrf_hydro_geo_meta, mpi_config
                 input_forcings.regridded_forcings2[input_forcings.input_map_output[force_count], :, :] += \
                     input_forcings.esmf_field_out.data
             except (ValueError, KeyError, AttributeError) as err:
-                config_options.errMsg = "Unable to extract regridded HRRR forcing data from the ESMF field: " + str(err)
+                config_options.errMsg = "Unable to extract regridded MPAS forcing data from the ESMF field: " + str(err)
                 err_handler.log_critical(config_options, mpi_config)
             err_handler.check_program_status(config_options, mpi_config)
         else:
@@ -179,7 +163,7 @@ def regrid_inputs(input_forcings, config_options, wrf_hydro_geo_meta, mpi_config
                 input_forcings.regridded_forcings2[input_forcings.input_map_output[force_count], :, :] = \
                     input_forcings.esmf_field_out.data
             except (ValueError, KeyError, AttributeError) as err:
-                config_options.errMsg = "Unable to extract regridded HRRR forcing data from the ESMF field: " + str(err)
+                config_options.errMsg = "Unable to extract regridded MPAS forcing data from the ESMF field: " + str(err)
                 err_handler.log_critical(config_options, mpi_config)
             err_handler.check_program_status(config_options, mpi_config)
 

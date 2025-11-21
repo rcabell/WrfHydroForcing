@@ -8,7 +8,7 @@ import numpy as np
 from core import time_handling
 from core import err_handler
 
-FORCE_COUNT = 23
+FORCE_COUNT = 26
 
 class ConfigOptions:
     """
@@ -883,7 +883,7 @@ class ConfigOptions:
                                            'section of the configuration file.')
             except json.decoder.JSONDecodeError:
                 err_handler.err_out_screen('Improper PrecipDownscaling options specified in the configuration file.')
-            
+
             if len(self.precipDownscaleOpt) != self.number_inputs:
                 err_handler.err_out_screen('Please specify PrecipDownscaling values for each corresponding '
                                                'input forcings in the configuration file.')

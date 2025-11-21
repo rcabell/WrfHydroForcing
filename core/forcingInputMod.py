@@ -140,7 +140,7 @@ class input_forcings:
             20: "Alaska_ExtAnA",
             21: "NBM",
             22: "NDFD",
-            23: "HRRR_15min"
+            23: "HRRR_15min",
             24: "RRFS NA 3km",
             25: "RRFS HI 2.5km",
             26: "RRFS PR 2.5km"
@@ -387,7 +387,7 @@ class input_forcings:
                  'APCP_surface'],
             23: ['TMP_2maboveground', 'SPFH_2maboveground',
                 'UGRD_10maboveground', 'VGRD_10maboveground',
-                'APCP_surface', 'DSWRF_surface', 'DLWRF_surface',
+                'APCP_surface', 'DSWRF_surface', 'DLWRF_surface'],
             24: ['TMP_2maboveground', 'SPFH_2maboveground',
                 'UGRD_10maboveground', 'VGRD_10maboveground',
                 'PRATE_surface', 'DSWRF_surface', 'DLWRF_surface',

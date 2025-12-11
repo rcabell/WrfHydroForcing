@@ -212,7 +212,7 @@ def param_lapse(input_forcings,ConfigOptions,GeoMetaWrfHydro,MpiConfig):
         if MpiConfig.rank == 0:
             while (True):
                 # First ensure we have a parameter directory
-                if input_forcings.paramDir == "NONE":
+                if input_forcings.paramDir == "NONE" or input_forcings.paramDir is None or input_forcings.paramDir == "":
                     ConfigOptions.errMsg = "User has specified spatial temperature lapse rate " \
                                            "downscaling while no downscaling parameter directory " \
                                            "exists."

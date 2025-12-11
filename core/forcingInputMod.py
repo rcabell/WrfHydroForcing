@@ -307,7 +307,7 @@ class input_forcings:
                  '10 m above ground', 'surface'],
             23: ['2 m above ground', '2 m above ground',
                 '10 m above ground', '10 m above ground',
-                'surface', 'surface', 'surface','surface'],
+                'surface', 'surface', 'surface', 'surface'],
             24: ['2 m above ground', '2 m above ground',
                 '10 m above ground', '10 m above ground',
                 'surface', 'surface', 'surface', 'surface'],

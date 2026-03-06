@@ -249,11 +249,11 @@ class input_forcings:
             23: ['TMP', 'SPFH', 'UGRD', 'VGRD', 'APCP', 'DSWRF',
                 'DLWRF', 'PRES'],
             24: ['TMP', 'SPFH', 'UGRD', 'VGRD', 'PRATE', 'DSWRF',
-                'DLWRF', 'PRES'],
+                'DLWRF', 'PRES', 'CPOFP'],
             25: ['TMP', 'SPFH', 'UGRD', 'VGRD', 'PRATE', 'DSWRF',
-                'DLWRF', 'PRES'],
+                'DLWRF', 'PRES', 'CPOFP'],
             26: ['TMP', 'SPFH', 'UGRD', 'VGRD', 'PRATE', 'DSWRF',
-                'DLWRF', 'PRES'],
+                'DLWRF', 'PRES', 'CPOFP'],
         }
         self.grib_vars = grib_vars_in[self.keyValue]
 
@@ -307,16 +307,16 @@ class input_forcings:
                  '10 m above ground', 'surface'],
             23: ['2 m above ground', '2 m above ground',
                 '10 m above ground', '10 m above ground',
-                'surface', 'surface', 'surface', 'surface'],
+                'surface', 'surface', 'surface','surface'],
             24: ['2 m above ground', '2 m above ground',
                 '10 m above ground', '10 m above ground',
-                'surface', 'surface', 'surface', 'surface'],
+                'surface', 'surface', 'surface', 'surface', 'surface'],
             25: ['2 m above ground', '2 m above ground',
                 '10 m above ground', '10 m above ground',
-                'surface', 'surface', 'surface', 'surface'],
+                'surface', 'surface', 'surface', 'surface', 'surface'],
             26: ['2 m above ground', '2 m above ground',
                 '10 m above ground', '10 m above ground',
-                'surface', 'surface', 'surface', 'surface']
+                'surface', 'surface', 'surface', 'surface', 'surface']
 
         }
         self.grib_levels = grib_levels_in[self.keyValue]
@@ -387,19 +387,20 @@ class input_forcings:
                  'APCP_surface'],
             23: ['TMP_2maboveground', 'SPFH_2maboveground',
                 'UGRD_10maboveground', 'VGRD_10maboveground',
-                'APCP_surface', 'DSWRF_surface', 'DLWRF_surface'],
+                'APCP_surface', 'DSWRF_surface', 'DLWRF_surface',
+                'PRES_surface'],
             24: ['TMP_2maboveground', 'SPFH_2maboveground',
                 'UGRD_10maboveground', 'VGRD_10maboveground',
                 'PRATE_surface', 'DSWRF_surface', 'DLWRF_surface',
-                'PRES_surface'],
+                'PRES_surface', 'CPOFP_surface'],
             25: ['TMP_2maboveground', 'SPFH_2maboveground',
                 'UGRD_10maboveground', 'VGRD_10maboveground',
                 'PRATE_surface', 'DSWRF_surface', 'DLWRF_surface',
-                'PRES_surface'],
+                'PRES_surface', 'CPOFP_surface'],
             26: ['TMP_2maboveground', 'SPFH_2maboveground',
                 'UGRD_10maboveground', 'VGRD_10maboveground',
                 'PRATE_surface', 'DSWRF_surface', 'DLWRF_surface',
-                'PRES_surface']
+                'PRES_surface', 'CPOFP_surface']
         }
         self.netcdf_var_names = netcdf_variables[self.keyValue]
 
@@ -460,9 +461,9 @@ class input_forcings:
             21: [4, 3],
             22: [4,0,1,3],
             23: [4,5,0,1,3,7,2,6],
-            24: [4,5,0,1,3,7,2,6], #['TMP', 'SPFH', 'UGRD', 'VGRD','PRATE', 'DSWRF', 'DLWRF','PRES', 'CPOFP'],
-            25: [4,5,0,1,3,7,2,6],
-            26: [4,5,0,1,3,7,2,6]
+            24: [4,5,0,1,3,7,2,6, 8], #['TMP', 'SPFH', 'UGRD', 'VGRD','PRATE', 'DSWRF', 'DLWRF','PRES', 'CPOFP'],
+            25: [4,5,0,1,3,7,2,6, 8],
+            26: [4,5,0,1,3,7,2,6, 8]
         }
         self.input_map_output = input_map_to_outputs[self.keyValue]
 
@@ -489,7 +490,10 @@ class input_forcings:
             20: None,
             21: None,
             22: None,
-            23: [18, 18, 18, 18, 18, 18, 36, 18, 18, 18, 18, 18, 36, 18, 18, 18, 18, 18, 36, 18, 18, 18, 18, 18]
+            23: [18, 18, 18, 18, 18, 18, 36, 18, 18, 18, 18, 18, 36, 18, 18, 18, 18, 18, 36, 18, 18, 18, 18, 18],
+            24: [84, 18, 18, 18, 18, 18, 84, 18, 18, 18, 18, 18, 84, 18, 18, 18, 18, 18, 84, 18, 18, 18, 18, 18],
+            25: None,
+            26: None
         }
         self.forecast_horizons = forecast_horizons[self.keyValue]
 

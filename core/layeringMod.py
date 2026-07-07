@@ -73,7 +73,7 @@ def layer_final_forcings(OutputObj,input_forcings,ConfigOptions,MpiConfig):
                     outLayerCurrent,
                     OutputObj.output_local[4, :, :],
                     ConfigOptions.globalNdv,
-                    "WARNING: Fully frozen precipitation detected but temperature above QC threshold."
+                    "WARNING: LQFRAC indicates frozen/mixed precipitation but temperature is above the QC threshold."
                 )
 
             OutputObj.output_local[force_idx, :, :] = outLayerCurrent
